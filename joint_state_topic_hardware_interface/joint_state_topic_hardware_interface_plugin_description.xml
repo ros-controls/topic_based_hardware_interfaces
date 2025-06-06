@@ -1,0 +1,11 @@
+<library path="joint_state_topic_hardware_interface">
+  <class
+    name="joint_state_topic_hardware_interface/JointStateTopicSystem"
+    type="joint_state_topic_hardware_interface::JointStateTopicSystem"
+    base_class_type="hardware_interface::SystemInterface"
+  >
+    <description>
+      ros2_control hardware interface for JointState topic based control.
+    </description>
+  </class>
+</library>

@@ -1,0 +1,14 @@
+*~
+~$
+.swp$
+*.pcd
+*.pyc
+**/__pycache__
+
+# colcon
+build/
+install/
+log/
+
+# vscode settings
+.vscode
