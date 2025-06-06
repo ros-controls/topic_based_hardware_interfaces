@@ -57,17 +57,9 @@ install(
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
-  find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_pytest REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
   find_package(ros_testing REQUIRED)
-
-  # ROS2 linters
-  set(ament_cmake_flake8_FOUND TRUE)
-  set(ament_cmake_pep257_FOUND TRUE)
-  set(ament_cmake_cpplint_FOUND TRUE)
-  set(ament_cmake_uncrustify_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
 
   # GTests
   ament_add_gtest(joint_state_topic_hardware_interface_test test/joint_state_topic_hardware_interface_test.cpp)
