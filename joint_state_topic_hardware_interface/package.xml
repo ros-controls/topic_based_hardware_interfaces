@@ -11,17 +11,11 @@
   <author email="jafar.uruc@gmail.com">Jafar Uruc</author>
   <author email="marq.razz@gmail.com">Marq Rasmussen</author>
 
-  <license>BSD</license>
+  <license>Apache License 2.0</license>
 
-  <url type="website">
-    https://github.com/MarqRazz/topic_based_hardware_interfaces
-  </url>
-  <url type="bugtracker">
-    https://github.com/MarqRazz/topic_based_hardware_interfaces/issues
-  </url>
-  <url type="repository">
-    https://github.com/MarqRazz/topic_based_hardware_interfaces/
-  </url>
+  <url type="website">https://github.com/ros-controls/topic_based_hardware_interfaces</url>
+  <url type="bugtracker">https://github.com/ros-controlsros-controls/topic_based_hardware_interfaces/issues</url>
+  <url type="repository">https://github.com/ros-controlsros-controls/topic_based_hardware_interfaces</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
@@ -30,8 +24,6 @@
   <depend>hardware_interface</depend>
   <depend>sensor_msgs</depend>
 
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
   <test_depend>controller_manager</test_depend>
   <test_depend>joint_state_broadcaster</test_depend>
   <test_depend>joint_trajectory_controller</test_depend>
