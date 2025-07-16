@@ -1,4 +1,4 @@
-# Topic Based Ros2 Control Hardware Interfaces
+# Topic Based ros2_control Hardware Interfaces
 
 Description: This is a ROS 2 package for integrating the ros2_control with any system that uses topics to command a robot and publish its state.
 
