@@ -39,7 +39,7 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 class JointStateTopicSystem : public hardware_interface::SystemInterface
 {
 public:
-  CallbackReturn on_init(const hardware_interface::HardwareInfo& info) override;
+  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams& params) override;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
@@ -52,7 +52,6 @@ public:
 private:
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr topic_based_joint_states_subscriber_;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr topic_based_joint_commands_publisher_;
-  rclcpp::Node::SharedPtr node_;
   sensor_msgs::msg::JointState latest_joint_state_;
   bool sum_wrapped_joint_states_{ false };
 

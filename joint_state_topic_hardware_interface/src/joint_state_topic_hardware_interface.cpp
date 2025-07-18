@@ -47,12 +47,14 @@ static constexpr std::size_t VELOCITY_INTERFACE_INDEX = 1;
 // JointState doesn't contain an acceleration field, so right now it's not used
 static constexpr std::size_t EFFORT_INTERFACE_INDEX = 3;
 
-CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::HardwareInfo& info)
+CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::HardwareComponentInterfaceParams& params)
 {
-  if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS)
+  if (hardware_interface::SystemInterface::on_init(params) != CallbackReturn::SUCCESS)
   {
     return CallbackReturn::ERROR;
   }
+
+  info_ = params.hardware_info;
 
   // Initialize storage for all joints' standard interfaces, regardless of their existence and set all values to nan
   joint_commands_.resize(standard_interfaces_.size());
@@ -120,20 +122,14 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
     return default_value;
   };
 
-  // Add random ID to prevent warnings about multiple publishers within the same node
-  rclcpp::NodeOptions options;
-  options.arguments({ "--ros-args", "-r", "__node:=topic_hardware_interface_" + info_.name });
-
-  node_ = rclcpp::Node::make_shared("_", options);
-
   if (auto it = info_.hardware_parameters.find("trigger_joint_command_threshold"); it != info_.hardware_parameters.end())
   {
     trigger_joint_command_threshold_ = std::stod(it->second);
   }
 
-  topic_based_joint_commands_publisher_ = node_->create_publisher<sensor_msgs::msg::JointState>(
+  topic_based_joint_commands_publisher_ = get_node()->create_publisher<sensor_msgs::msg::JointState>(
       get_hardware_parameter("joint_commands_topic", "/robot_joint_commands"), rclcpp::QoS(1));
-  topic_based_joint_states_subscriber_ = node_->create_subscription<sensor_msgs::msg::JointState>(
+  topic_based_joint_states_subscriber_ = get_node()->create_subscription<sensor_msgs::msg::JointState>(
       get_hardware_parameter("joint_states_topic", "/robot_joint_states"), rclcpp::SensorDataQoS(),
       [this](const sensor_msgs::msg::JointState::SharedPtr joint_state) { latest_joint_state_ = *joint_state; });
 
@@ -193,7 +189,7 @@ hardware_interface::return_type JointStateTopicSystem::read(const rclcpp::Time& 
 {
   if (rclcpp::ok())
   {
-    rclcpp::spin_some(node_);
+    rclcpp::spin_some(get_node());
   }
 
   for (std::size_t i = 0; i < latest_joint_state_.name.size(); ++i)
@@ -268,7 +264,7 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
   for (std::size_t i = 0; i < info_.joints.size(); ++i)
   {
     joint_state.name.push_back(info_.joints[i].name);
-    joint_state.header.stamp = node_->now();
+    joint_state.header.stamp = get_node()->now();
     // only send commands to the interfaces that are defined for this joint
     for (const auto& interface : info_.joints[i].command_interfaces)
     {
@@ -286,7 +282,7 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
       }
       else
       {
-        RCLCPP_WARN_ONCE(node_->get_logger(), "Joint '%s' has unsupported command interfaces found: %s.",
+        RCLCPP_WARN_ONCE(get_node()->get_logger(), "Joint '%s' has unsupported command interfaces found: %s.",
                          info_.joints[i].name.c_str(), interface.name.c_str());
       }
     }
