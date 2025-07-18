@@ -187,11 +187,6 @@ std::vector<hardware_interface::CommandInterface> JointStateTopicSystem::export_
 hardware_interface::return_type JointStateTopicSystem::read(const rclcpp::Time& /*time*/,
                                                             const rclcpp::Duration& /*period*/)
 {
-  if (rclcpp::ok())
-  {
-    rclcpp::spin_some(get_node());
-  }
-
   for (std::size_t i = 0; i < latest_joint_state_.name.size(); ++i)
   {
     const auto& joints = info_.joints;
