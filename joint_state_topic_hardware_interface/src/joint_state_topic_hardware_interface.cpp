@@ -54,8 +54,6 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
     return CallbackReturn::ERROR;
   }
 
-  info_ = params.hardware_info;
-
   // Initialize storage for all joints' standard interfaces, regardless of their existence and set all values to nan
   joint_commands_.resize(standard_interfaces_.size());
   joint_states_.resize(standard_interfaces_.size());
