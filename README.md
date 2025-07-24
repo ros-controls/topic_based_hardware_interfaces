@@ -1,5 +1,6 @@
 # Topic Based ros2_control Hardware Interfaces
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![codecov](https://codecov.io/gh/ros-controls/topic_based_hardware_interfaces/graph/badge.svg?token=NS73VKPG9V)](https://codecov.io/gh/ros-controls/topic_based_hardware_interfaces)
 
 This is a ROS 2 package for integrating the ros2_control with any system that uses topics to command a robot and publish its state.
 
