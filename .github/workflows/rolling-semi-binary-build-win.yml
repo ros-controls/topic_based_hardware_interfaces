@@ -16,4 +16,5 @@ jobs:
     with:
       ros_distro: rolling
       ref_for_scheduled_build: main
-      pixi_dependencies: boost compilers
+      pixi_dependencies: typeguard jinja2 boost compilers
+      windows_dependencies: topic_based_hardware_interfaces.windows.rolling.repos
