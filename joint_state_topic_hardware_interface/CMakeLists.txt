@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
 project(joint_state_topic_hardware_interface CXX)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Werror -Wall -Wextra -Wpedantic -Wshadow
-    -Wsign-conversion -Winit-self -Wredundant-decls)
+find_package(ros2_control_cmake REQUIRED)
+set_compiler_options()
+if(WIN32)
+  # set the same behavior for windows as it is on linux
+  export_windows_symbols()
 endif()
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
