@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [jazzy, kilted, rolling]
+        ROS_DISTRO: [humble, jazzy, kilted, rolling]
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}
       upstream_workspace: topic_based_hardware_interfaces.${{ matrix.ROS_DISTRO }}.repos

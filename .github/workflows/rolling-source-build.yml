@@ -29,6 +29,9 @@ jobs:
         - ROS_DISTRO: jazzy
           CONTAINER: ubuntu:24.04
           OS_NAME: ubuntu-latest
+        - ROS_DISTRO: humble
+          CONTAINER: ubuntu:22.04
+          OS_NAME: ubuntu-latest
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}
       ref: main
