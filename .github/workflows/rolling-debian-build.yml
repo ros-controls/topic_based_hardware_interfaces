@@ -9,7 +9,7 @@ on:
     - cron: '33 2 * * MON-FRI'
 
 concurrency:
-  # cancel previous runs of the same workflow, except for pushes on humble branch
+  # cancel previous runs of the same workflow, except for pushes on main branch
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ !startsWith(github.ref, '/refs/heads') }}
 
@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [humble, jazzy, kilted, rolling]
+        ROS_DISTRO: [jazzy, kilted, rolling]
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}
       upstream_workspace: topic_based_hardware_interfaces.${{ matrix.ROS_DISTRO }}.repos
