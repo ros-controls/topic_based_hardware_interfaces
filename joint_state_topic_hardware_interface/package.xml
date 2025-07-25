@@ -19,6 +19,7 @@
   <url type="repository">https://github.com/ros-controlsros-controls/topic_based_hardware_interfaces</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>ros2_control_cmake</build_depend>
 
   <depend>angles</depend>
   <depend>rclcpp</depend>
