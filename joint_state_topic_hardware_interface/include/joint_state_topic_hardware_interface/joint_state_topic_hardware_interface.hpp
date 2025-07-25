@@ -21,11 +21,8 @@
 #include <string>
 
 // ROS
-#include <hardware_interface/handle.hpp>
-#include <hardware_interface/hardware_info.hpp>
 #include <hardware_interface/system_interface.hpp>
-#include <hardware_interface/types/hardware_interface_return_values.hpp>
-#include <hardware_interface/types/hardware_interface_type_values.hpp>
+#include <hardware_interface/types/hardware_component_interface_params.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/subscription.hpp>
@@ -56,10 +53,10 @@ private:
   bool sum_wrapped_joint_states_{ false };
 
   /// Use standard interfaces for joints because they are relevant for dynamic behavior
-  std::array<std::string, 4> standard_interfaces_ = { hardware_interface::HW_IF_POSITION,
-                                                      hardware_interface::HW_IF_VELOCITY,
-                                                      hardware_interface::HW_IF_ACCELERATION,
-                                                      hardware_interface::HW_IF_EFFORT };
+  std::array<std::string, 4> standard_interfaces_ = {
+    { hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_ACCELERATION,
+      hardware_interface::HW_IF_EFFORT }
+  };
 
   struct MimicJoint
   {
