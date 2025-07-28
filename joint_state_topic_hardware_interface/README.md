@@ -2,23 +2,23 @@
 
 The Joint State Topic Based System implements a ros2_control `hardware_interface::SystemInterface` supporting command and state interfaces through the ROS topic communication layer.
 
-### ros2_control urdf tag
+## ros2_control urdf tag
 
 The `joint_state_topic_hardware_interface` has a few `ros2_control` urdf tags to customize its behavior.
 
-#### Parameters
+### Parameters
 
 * joint_commands_topic: (default: "/robot_joint_command"). Example: `<param name="joint_commands_topic">/my_topic_joint_commands</param>`.
 * joint_states_topic: (default: "/robot_joint_states"). Example: `<param name="joint_states_topic">/my_topic_joint_states</param>`.
 * trigger_joint_command_threshold: (default: 1e-5). Used to avoid spamming the joint command topic when the difference between the current joint state and the joint command is smaller than this value, set to -1 to always send the joint command. Example: `<param name="trigger_joint_command_threshold">0.001</param>`.
 * sum_wrapped_joint_states: (default: "false"). Used to track the total rotation for joint states the values reported on the `joint_commands_topic` wrap from 2*pi to -2*pi when rotating in the positive direction. (Isaac Sim only reports joint states from 2*pi to -2*pi) Example: `<param name="sum_wrapped_joint_states">true</param>`.
 
-#### Per-joint Parameters
+### Per-joint Parameters
 
 * mimic: Defined name of the joint to mimic. This is often used concept with parallel grippers. Example: `<param name="mimic">joint1</param>`.
 * multiplier: Multiplier of values for mimicking joint defined in mimic parameter. Example: `<param name="multiplier">-2</param>`.
 
-### Modifying the urdf `ros2_control` tag for new robots
+## Modifying the urdf `ros2_control` tag for new robots
 
 If your robot description support mock_components you simply add an if-else statement to switch between it and `<plugin>joint_state_topic_hardware_interface/JointStateTopicSystem</plugin>`, make sure to add the `joint_commands_topic` and `joint_states_topic` to point to the correct topics.
 
