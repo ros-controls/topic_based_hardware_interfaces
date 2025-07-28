@@ -59,14 +59,14 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
   joint_states_.resize(standard_interfaces_.size());
   for (auto i = 0u; i < standard_interfaces_.size(); i++)
   {
-    joint_commands_[i].resize(info_.joints.size(), 0.0);
-    joint_states_[i].resize(info_.joints.size(), 0.0);
+    joint_commands_[i].resize(get_hardware_info().joints.size(), 0.0);
+    joint_states_[i].resize(get_hardware_info().joints.size(), 0.0);
   }
 
   // Initial command values
-  for (auto i = 0u; i < info_.joints.size(); i++)
+  for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
   {
-    const auto& component = info_.joints[i];
+    const auto& component = get_hardware_info().joints[i];
     for (const auto& interface : component.state_interfaces)
     {
       auto it = std::find(standard_interfaces_.begin(), standard_interfaces_.end(), interface.name);
@@ -85,24 +85,24 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
   }
 
   // Search for mimic joints
-  for (auto i = 0u; i < info_.joints.size(); ++i)
+  for (auto i = 0u; i < get_hardware_info().joints.size(); ++i)
   {
-    const auto& joint = info_.joints.at(i);
+    const auto& joint = get_hardware_info().joints.at(i);
     if (joint.parameters.find("mimic") != joint.parameters.cend())
     {
       const auto mimicked_joint_it = std::find_if(
-          info_.joints.begin(), info_.joints.end(),
+          get_hardware_info().joints.begin(), get_hardware_info().joints.end(),
           [&mimicked_joint = joint.parameters.at("mimic")](const hardware_interface::ComponentInfo& joint_info) {
             return joint_info.name == mimicked_joint;
           });
-      if (mimicked_joint_it == info_.joints.cend())
+      if (mimicked_joint_it == get_hardware_info().joints.cend())
       {
         throw std::runtime_error(std::string("Mimicked joint '") + joint.parameters.at("mimic") + "' not found");
       }
       MimicJoint mimic_joint;
       mimic_joint.joint_index = i;
       mimic_joint.mimicked_joint_index =
-          static_cast<std::size_t>(std::distance(info_.joints.begin(), mimicked_joint_it));
+          static_cast<std::size_t>(std::distance(get_hardware_info().joints.begin(), mimicked_joint_it));
       auto param_it = joint.parameters.find("multiplier");
       if (param_it != joint.parameters.end())
       {
@@ -113,27 +113,23 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
   }
 
   const auto get_hardware_parameter = [this](const std::string& parameter_name, const std::string& default_value) {
-    if (auto it = info_.hardware_parameters.find(parameter_name); it != info_.hardware_parameters.end())
+    if (auto it = get_hardware_info().hardware_parameters.find(parameter_name);
+        it != get_hardware_info().hardware_parameters.end())
     {
       return it->second;
     }
     return default_value;
   };
 
-  // Add random ID to prevent warnings about multiple publishers within the same node
-  rclcpp::NodeOptions options;
-  options.arguments({ "--ros-args", "-r", "__node:=topic_hardware_interface_" + info_.name });
-
-  node_ = rclcpp::Node::make_shared("_", options);
-
-  if (auto it = info_.hardware_parameters.find("trigger_joint_command_threshold"); it != info_.hardware_parameters.end())
+  if (auto it = get_hardware_info().hardware_parameters.find("trigger_joint_command_threshold");
+      it != get_hardware_info().hardware_parameters.end())
   {
     trigger_joint_command_threshold_ = std::stod(it->second);
   }
 
-  topic_based_joint_commands_publisher_ = node_->create_publisher<sensor_msgs::msg::JointState>(
+  topic_based_joint_commands_publisher_ = get_node()->create_publisher<sensor_msgs::msg::JointState>(
       get_hardware_parameter("joint_commands_topic", "/robot_joint_commands"), rclcpp::QoS(1));
-  topic_based_joint_states_subscriber_ = node_->create_subscription<sensor_msgs::msg::JointState>(
+  topic_based_joint_states_subscriber_ = get_node()->create_subscription<sensor_msgs::msg::JointState>(
       get_hardware_parameter("joint_states_topic", "/robot_joint_states"), rclcpp::SensorDataQoS(),
       [this](const sensor_msgs::msg::JointState::SharedPtr joint_state) { latest_joint_state_ = *joint_state; });
 
@@ -152,9 +148,9 @@ std::vector<hardware_interface::StateInterface> JointStateTopicSystem::export_st
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
   // Joints' state interfaces
-  for (auto i = 0u; i < info_.joints.size(); i++)
+  for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
   {
-    const auto& joint = info_.joints[i];
+    const auto& joint = get_hardware_info().joints[i];
     for (const auto& interface : joint.state_interfaces)
     {
       // Add interface: if not in the standard list then use "other" interface list
@@ -173,9 +169,9 @@ std::vector<hardware_interface::CommandInterface> JointStateTopicSystem::export_
   std::vector<hardware_interface::CommandInterface> command_interfaces;
 
   // Joints' state interfaces
-  for (auto i = 0u; i < info_.joints.size(); i++)
+  for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
   {
-    const auto& joint = info_.joints[i];
+    const auto& joint = get_hardware_info().joints[i];
     for (const auto& interface : joint.command_interfaces)
     {
       if (!getInterface(joint.name, interface.name, i, joint_commands_, command_interfaces))
@@ -191,14 +187,9 @@ std::vector<hardware_interface::CommandInterface> JointStateTopicSystem::export_
 hardware_interface::return_type JointStateTopicSystem::read(const rclcpp::Time& /*time*/,
                                                             const rclcpp::Duration& /*period*/)
 {
-  if (rclcpp::ok())
-  {
-    rclcpp::spin_some(node_);
-  }
-
   for (std::size_t i = 0; i < latest_joint_state_.name.size(); ++i)
   {
-    const auto& joints = info_.joints;
+    const auto& joints = get_hardware_info().joints;
     auto it = std::find_if(joints.begin(), joints.end(),
                            [&joint_name = std::as_const(latest_joint_state_.name[i])](
                                const hardware_interface::ComponentInfo& info) { return joint_name == info.name; });
@@ -265,12 +256,12 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
   }
 
   sensor_msgs::msg::JointState joint_state;
-  for (std::size_t i = 0; i < info_.joints.size(); ++i)
+  for (std::size_t i = 0; i < get_hardware_info().joints.size(); ++i)
   {
-    joint_state.name.push_back(info_.joints[i].name);
-    joint_state.header.stamp = node_->now();
+    joint_state.name.push_back(get_hardware_info().joints[i].name);
+    joint_state.header.stamp = get_node()->now();
     // only send commands to the interfaces that are defined for this joint
-    for (const auto& interface : info_.joints[i].command_interfaces)
+    for (const auto& interface : get_hardware_info().joints[i].command_interfaces)
     {
       if (interface.name == hardware_interface::HW_IF_POSITION)
       {
@@ -286,15 +277,15 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
       }
       else
       {
-        RCLCPP_WARN_ONCE(node_->get_logger(), "Joint '%s' has unsupported command interfaces found: %s.",
-                         info_.joints[i].name.c_str(), interface.name.c_str());
+        RCLCPP_WARN_ONCE(get_node()->get_logger(), "Joint '%s' has unsupported command interfaces found: %s.",
+                         get_hardware_info().joints[i].name.c_str(), interface.name.c_str());
       }
     }
   }
 
   for (const auto& mimic_joint : mimic_joints_)
   {
-    for (const auto& interface : info_.joints[mimic_joint.mimicked_joint_index].command_interfaces)
+    for (const auto& interface : get_hardware_info().joints[mimic_joint.mimicked_joint_index].command_interfaces)
     {
       if (interface.name == hardware_interface::HW_IF_POSITION)
       {
