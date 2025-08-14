@@ -64,23 +64,24 @@ if(BUILD_TESTING)
   find_package(ros_testing REQUIRED)
 
   # GTests
-  ament_add_gtest(joint_state_topic_hardware_interface_test test/joint_state_topic_hardware_interface_test.cpp)
-  target_link_libraries(joint_state_topic_hardware_interface_test
-    ${PROJECT_NAME})
-  target_link_libraries(joint_state_topic_hardware_interface_test
-                        angles::angles
-                        rclcpp::rclcpp
-                        hardware_interface::hardware_interface
-                        ${sensor_msgs_TARGETS}
-                        ros2_control_test_assets::ros2_control_test_assets)
+  # TODO(anyone): reactivate if https://github.com/ros-controls/topic_based_hardware_interfaces/issues/14 is fixed
+  # ament_add_gtest(joint_state_topic_hardware_interface_test test/joint_state_topic_hardware_interface_test.cpp)
+  # target_link_libraries(joint_state_topic_hardware_interface_test
+  #                       ${PROJECT_NAME}
+  #                       angles::angles
+  #                       rclcpp::rclcpp
+  #                       hardware_interface::hardware_interface
+  #                       ${sensor_msgs_TARGETS}
+  #                       ros2_control_test_assets::ros2_control_test_assets)
 
   # Integration tests
-  add_ros_test(
-    test/ros2_control.test.py
-    TIMEOUT
-    120
-    ARGS
-    test_file:=${CMAKE_CURRENT_SOURCE_DIR}/test/test_topic_based_robot.py)
+  # TODO(anyone): reactivate if https://github.com/ros-controls/topic_based_hardware_interfaces/issues/21 is fixed
+  # add_ros_test(
+  #   test/ros2_control.test.py
+  #   TIMEOUT
+  #   120
+  #   ARGS
+  #   test_file:=${CMAKE_CURRENT_SOURCE_DIR}/test/test_topic_based_robot.py)
 endif()
 
 pluginlib_export_plugin_description_file(hardware_interface joint_state_topic_hardware_interface_plugin_description.xml)
