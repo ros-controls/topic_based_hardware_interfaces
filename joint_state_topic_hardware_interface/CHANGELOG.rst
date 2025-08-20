@@ -2,8 +2,8 @@
 Changelog for package joint_state_topic_hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.0 (2025-08-20)
+------------------
 * Deactivate all tests (`#24 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/24>`_)
 * Fix headings (`#13 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/13>`_)
 * Switched to Default Node from CM Executor and updated to new params API (`#6 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/6>`_)
