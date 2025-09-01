@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Copyright 2025 ros2_control Development Team
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
