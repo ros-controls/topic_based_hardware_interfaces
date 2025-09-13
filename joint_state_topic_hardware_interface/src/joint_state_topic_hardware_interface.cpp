@@ -145,7 +145,6 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
   {
     RCLCPP_WARN(get_node()->get_logger(), "** Joint command limiting is enabled **");
   }
-  
   return CallbackReturn::SUCCESS;
 }
 
