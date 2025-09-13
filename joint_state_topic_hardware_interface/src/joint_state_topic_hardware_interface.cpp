@@ -59,6 +59,7 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
   joint_commands_.resize(standard_interfaces_.size());
   joint_states_.resize(standard_interfaces_.size());
   velocity_limits_.resize(get_hardware_info().joints.size());
+  limited_velocity_commands_.resize(get_hardware_info().joints.size());
   nonlimited_velocity_commands_.resize(get_hardware_info().joints.size());
   for (auto i = 0u; i < standard_interfaces_.size(); i++)
   {
@@ -155,7 +156,8 @@ CallbackReturn JointStateTopicSystem::on_configure(const rclcpp_lifecycle::State
 {
   REGISTER_ROS2_CONTROL_INTROSPECTION("nonlimited_left_wheel_velocity", &nonlimited_velocity_commands_[0]);
   REGISTER_ROS2_CONTROL_INTROSPECTION("nonlimited_right_wheel_velocity", &nonlimited_velocity_commands_[1]);
-
+  REGISTER_ROS2_CONTROL_INTROSPECTION("limited_left_wheel_velocity", &limited_velocity_commands_[0]);
+  REGISTER_ROS2_CONTROL_INTROSPECTION("limited_right_wheel_velocity", &limited_velocity_commands_[1]);
   return CallbackReturn::SUCCESS;
 }
 
@@ -285,14 +287,12 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
       }
       else if (interface.name == hardware_interface::HW_IF_VELOCITY)
       {
+        nonlimited_velocity_commands_[i] = joint_commands_[VELOCITY_INTERFACE_INDEX][i];
         if(enable_command_limiting_)
         {
-          //RCLCPP_WARN(get_node()->get_logger(),"Before clamp: %f",joint_commands_[VELOCITY_INTERFACE_INDEX][i]);
-          nonlimited_velocity_commands_[i] = joint_commands_[VELOCITY_INTERFACE_INDEX][i];
-          joint_commands_[VELOCITY_INTERFACE_INDEX][i] = std::clamp(nonlimited_velocity_commands_[i], velocity_limits_[i].min, velocity_limits_[i].max);
-          //RCLCPP_WARN(get_node()->get_logger(),"After clamp: %f",joint_commands_[VELOCITY_INTERFACE_INDEX][i]);
+          limited_velocity_commands_[i] = std::clamp(nonlimited_velocity_commands_[i], velocity_limits_[i].min, velocity_limits_[i].max);
         }
-        joint_state.velocity.push_back(joint_commands_[VELOCITY_INTERFACE_INDEX][i]);
+        joint_state.velocity.push_back(limited_velocity_commands_[i]);
       }
       else if (interface.name == hardware_interface::HW_IF_EFFORT)
       {

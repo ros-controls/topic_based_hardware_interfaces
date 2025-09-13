@@ -38,7 +38,6 @@ struct VelocityLimits
   explicit VelocityLimits() = default;
   explicit VelocityLimits(const hardware_interface::InterfaceInfo& info)
   {
-    std::cout << "********************* MIN IS " << info.min << " AND MAX IS " << info.max << std::endl;
     if(not info.min.empty())
     {
       min = std::stod(info.min);
@@ -57,6 +56,8 @@ class JointStateTopicSystem : public hardware_interface::SystemInterface
 {
 public:
   CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams& params) override;
+
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
@@ -92,6 +93,7 @@ private:
 
   bool enable_command_limiting_ = false;
   std::vector<double> nonlimited_velocity_commands_;
+  std::vector<double> limited_velocity_commands_;
   std::vector<VelocityLimits> velocity_limits_;
 
   // If the difference between the current joint state and joint command is less than this value,
