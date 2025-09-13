@@ -57,6 +57,7 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
   // Initialize storage for all joints' standard interfaces, regardless of their existence and set all values to nan
   joint_commands_.resize(standard_interfaces_.size());
   joint_states_.resize(standard_interfaces_.size());
+  velocity_limits_.resize(get_hardware_info().joints.size());
   for (auto i = 0u; i < standard_interfaces_.size(); i++)
   {
     joint_commands_[i].resize(get_hardware_info().joints.size(), 0.0);
@@ -67,7 +68,7 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
   for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
   {
     const auto& component = get_hardware_info().joints[i];
-    for (const auto& interface : component.state_interfaces)
+    for (const auto& interface : component.command_interfaces)
     {
       auto it = std::find(standard_interfaces_.begin(), standard_interfaces_.end(), interface.name);
       // If interface name is found in the interfaces list
@@ -80,6 +81,7 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
           joint_states_[index][i] = std::stod(interface.initial_value);
           joint_commands_[index][i] = std::stod(interface.initial_value);
         }
+        velocity_limits_[i] = VelocityLimits(interface);
       }
     }
   }
@@ -135,11 +137,15 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
 
   // if the values on the `joint_states_topic` are wrapped between -2*pi and 2*pi (like they are in Isaac Sim)
   // sum the total joint rotation returned on the `joint_states_` interface
-  if (get_hardware_parameter("sum_wrapped_joint_states", "false") == "true")
-  {
-    sum_wrapped_joint_states_ = true;
-  }
+  sum_wrapped_joint_states_ = get_hardware_parameter("sum_wrapped_joint_states", "false") == "true";
+  // Clamp the command values to the min/max defined in the <ros2_control> tag for each joint
+  enable_command_limiting_ = get_hardware_parameter("enable_command_limiting", "false") == "true";
 
+  if(enable_command_limiting_)
+  {
+    RCLCPP_WARN(get_node()->get_logger(), "** Joint command limiting is enabled **");
+  }
+  
   return CallbackReturn::SUCCESS;
 }
 
@@ -269,6 +275,10 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
       }
       else if (interface.name == hardware_interface::HW_IF_VELOCITY)
       {
+        if(enable_command_limiting_ && velocity_limits_[i].valid())
+        {
+          std::clamp(joint_commands_[VELOCITY_INTERFACE_INDEX][i], velocity_limits[i].min, velocity_limits[i].max);
+        }
         joint_state.velocity.push_back(joint_commands_[VELOCITY_INTERFACE_INDEX][i]);
       }
       else if (interface.name == hardware_interface::HW_IF_EFFORT)
