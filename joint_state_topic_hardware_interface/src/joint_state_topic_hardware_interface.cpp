@@ -275,7 +275,7 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
       }
       else if (interface.name == hardware_interface::HW_IF_VELOCITY)
       {
-        if(enable_command_limiting_ && velocity_limits_[i].valid())
+        if(enable_command_limiting_)
         {
           std::clamp(joint_commands_[VELOCITY_INTERFACE_INDEX][i], velocity_limits[i].min, velocity_limits[i].max);
         }
