@@ -33,6 +33,26 @@ namespace joint_state_topic_hardware_interface
 {
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
+struct VelocityLimits
+{
+  explicit VelocityLimits() = default;
+  explicit VelocityLimits(const hardware_interface::InterfaceInfo& info)
+  {
+    std::cout << "********************* MIN IS " << info.min << " AND MAX IS " << info.max << std::endl;
+    if(not info.min.empty())
+    {
+      min = std::stod(info.min);
+    }
+    if(not info.max.empty())
+    {
+      max = std::stod(info.max);
+    }
+  }
+
+  double min = -std::numeric_limits<double>::infinity();
+  double max = std::numeric_limits<double>::infinity();
+};
+
 class JointStateTopicSystem : public hardware_interface::SystemInterface
 {
 public:
@@ -69,6 +89,10 @@ private:
   /// The size of this vector is (standard_interfaces_.size() x nr_joints)
   std::vector<std::vector<double>> joint_commands_;
   std::vector<std::vector<double>> joint_states_;
+
+  bool enable_command_limiting_ = false;
+  std::vector<double> nonlimited_velocity_commands_;
+  std::vector<VelocityLimits> velocity_limits_;
 
   // If the difference between the current joint state and joint command is less than this value,
   // the joint command will not be published.
