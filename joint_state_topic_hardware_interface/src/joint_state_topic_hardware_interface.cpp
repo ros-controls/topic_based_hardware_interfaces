@@ -299,7 +299,6 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
         {
            joint_state.velocity.push_back(nonlimited_velocity_commands_[i]);
         }
-
       }
       else if (interface.name == hardware_interface::HW_IF_EFFORT)
       {
