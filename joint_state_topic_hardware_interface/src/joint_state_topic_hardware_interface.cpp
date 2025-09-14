@@ -22,8 +22,8 @@
 #include <vector>
 
 #include <angles/angles.h>
-#include <joint_state_topic_hardware_interface/joint_state_topic_hardware_interface.hpp>
 #include <hardware_interface/introspection.hpp>
+#include <joint_state_topic_hardware_interface/joint_state_topic_hardware_interface.hpp>
 #include <rclcpp/executors.hpp>
 
 namespace
@@ -140,19 +140,20 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
 
   // if the values on the `joint_states_topic` are wrapped between -2*pi and 2*pi (like they are in Isaac Sim)
   // sum the total joint rotation returned on the `joint_states_` interface
-  sum_wrapped_joint_states_ = hardware_interface::parse_bool(get_hardware_parameter("sum_wrapped_joint_states", "false"));
+  sum_wrapped_joint_states_ =
+      hardware_interface::parse_bool(get_hardware_parameter("sum_wrapped_joint_states", "false"));
   // Clamp the command values to the min/max defined in the <ros2_control> tag for each joint
   enable_command_limiting_ = hardware_interface::parse_bool(get_hardware_parameter("enable_command_limiting", "false"));
 
-  if(enable_command_limiting_)
+  if (enable_command_limiting_)
   {
     RCLCPP_WARN(get_node()->get_logger(), "** Joint command limiting is enabled **");
   }
-  
+
   return CallbackReturn::SUCCESS;
 }
 
-CallbackReturn JointStateTopicSystem::on_configure(const rclcpp_lifecycle::State & /*previous_state*/)
+CallbackReturn JointStateTopicSystem::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   REGISTER_ROS2_CONTROL_INTROSPECTION("nonlimited_left_wheel_velocity", &nonlimited_velocity_commands_[0]);
   REGISTER_ROS2_CONTROL_INTROSPECTION("nonlimited_right_wheel_velocity", &nonlimited_velocity_commands_[1]);
@@ -288,9 +289,10 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
       else if (interface.name == hardware_interface::HW_IF_VELOCITY)
       {
         nonlimited_velocity_commands_[i] = joint_commands_[VELOCITY_INTERFACE_INDEX][i];
-        if(enable_command_limiting_)
+        if (enable_command_limiting_)
         {
-          limited_velocity_commands_[i] = std::clamp(nonlimited_velocity_commands_[i], velocity_limits_[i].min, velocity_limits_[i].max);
+          limited_velocity_commands_[i] =
+              std::clamp(nonlimited_velocity_commands_[i], velocity_limits_[i].min, velocity_limits_[i].max);
         }
         joint_state.velocity.push_back(limited_velocity_commands_[i]);
       }
