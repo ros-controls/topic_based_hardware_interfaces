@@ -293,8 +293,13 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
         {
           limited_velocity_commands_[i] =
               std::clamp(nonlimited_velocity_commands_[i], velocity_limits_[i].min, velocity_limits_[i].max);
+           joint_state.velocity.push_back(limited_velocity_commands_[i]);
         }
-        joint_state.velocity.push_back(limited_velocity_commands_[i]);
+        else
+        {
+           joint_state.velocity.push_back(nonlimited_velocity_commands_[i]);
+        }
+
       }
       else if (interface.name == hardware_interface::HW_IF_EFFORT)
       {
