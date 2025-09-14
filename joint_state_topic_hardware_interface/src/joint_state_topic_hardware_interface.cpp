@@ -22,6 +22,7 @@
 #include <vector>
 
 #include <angles/angles.h>
+#include <hardware_interface/introspection.hpp>
 #include <joint_state_topic_hardware_interface/joint_state_topic_hardware_interface.hpp>
 #include <rclcpp/executors.hpp>
 
@@ -149,6 +150,15 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
     RCLCPP_WARN(get_node()->get_logger(), "** Joint command limiting is enabled **");
   }
 
+  return CallbackReturn::SUCCESS;
+}
+
+CallbackReturn JointStateTopicSystem::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
+{
+  REGISTER_ROS2_CONTROL_INTROSPECTION("nonlimited_left_wheel_velocity", &nonlimited_velocity_commands_[0]);
+  REGISTER_ROS2_CONTROL_INTROSPECTION("nonlimited_right_wheel_velocity", &nonlimited_velocity_commands_[1]);
+  REGISTER_ROS2_CONTROL_INTROSPECTION("limited_left_wheel_velocity", &limited_velocity_commands_[0]);
+  REGISTER_ROS2_CONTROL_INTROSPECTION("limited_right_wheel_velocity", &limited_velocity_commands_[1]);
   return CallbackReturn::SUCCESS;
 }
 
