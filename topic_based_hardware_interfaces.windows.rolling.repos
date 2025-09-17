@@ -21,7 +21,7 @@ repositories:
     version: humble-devel
   backward_ros:
     type: git
-    url: https://github.com/pal-robotics//backward_ros.git
+    url: https://github.com/pal-robotics/backward_ros.git
     version: foxy-devel
   diagnostics:
     type: git
@@ -30,4 +30,8 @@ repositories:
   angles:
     type: git
     url: https://github.com/ros/angles
+    version: ros2
+  ackermann_msgs:
+    type: git
+    url: https://github.com/ros-drivers/ackermann_msgs.git
     version: ros2

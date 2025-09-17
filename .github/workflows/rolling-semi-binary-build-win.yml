@@ -19,3 +19,4 @@ jobs:
       pixi_dependencies: typeguard jinja2 boost compilers
       ninja_packages: rsl
       windows_dependencies: topic_based_hardware_interfaces.windows.rolling.repos
+      skip_packages: diagnostic_remote_logging generate_parameter_library_example_external generate_parameter_library_example
