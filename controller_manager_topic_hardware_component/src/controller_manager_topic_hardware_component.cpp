@@ -12,13 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
-#include <cmath>
-#include <iterator>
-#include <limits>
-#include <set>
 #include <string>
-#include <vector>
 
 #include \
   <controller_manager_topic_hardware_component/controller_manager_topic_hardware_component.hpp>
