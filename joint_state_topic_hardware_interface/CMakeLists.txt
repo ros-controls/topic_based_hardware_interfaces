@@ -58,21 +58,19 @@ install(
 #############
 
 if(BUILD_TESTING)
-  find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_cmake_gmock REQUIRED)
   find_package(ament_cmake_pytest REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
   find_package(ros_testing REQUIRED)
 
-  # GTests
-  # TODO(anyone): reactivate if https://github.com/ros-controls/topic_based_hardware_interfaces/issues/14 is fixed
-  # ament_add_gtest(joint_state_topic_hardware_interface_test test/joint_state_topic_hardware_interface_test.cpp)
-  # target_link_libraries(joint_state_topic_hardware_interface_test
-  #                       ${PROJECT_NAME}
-  #                       angles::angles
-  #                       rclcpp::rclcpp
-  #                       hardware_interface::hardware_interface
-  #                       ${sensor_msgs_TARGETS}
-  #                       ros2_control_test_assets::ros2_control_test_assets)
+  ament_add_gmock(joint_state_topic_hardware_interface_test test/joint_state_topic_hardware_interface_test.cpp)
+  target_link_libraries(joint_state_topic_hardware_interface_test
+                        ${PROJECT_NAME}
+                        angles::angles
+                        rclcpp::rclcpp
+                        hardware_interface::hardware_interface
+                        ${sensor_msgs_TARGETS}
+                        ros2_control_test_assets::ros2_control_test_assets)
 
   # Integration tests
   # TODO(anyone): reactivate if https://github.com/ros-controls/topic_based_hardware_interfaces/issues/21 is fixed
