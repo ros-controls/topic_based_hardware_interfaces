@@ -64,7 +64,15 @@ TEST(TestTopicBasedSystem, load_topic_based_system_2dof)
   params.clock = node->get_clock();
   params.logger = node->get_logger();
   params.executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  ASSERT_NO_THROW(hardware_interface::ResourceManager rm(params, true));
+  try
+  {
+    hardware_interface::ResourceManager rm(params, true);
+  }
+  catch (const std::exception& e)
+  {
+    std::cerr << "Exception caught: " << e.what() << std::endl;
+    FAIL() << "Exception thrown during ResourceManager construction: " << e.what();
+  }
 #else
   ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf, true, false));
 #endif
