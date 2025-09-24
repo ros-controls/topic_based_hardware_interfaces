@@ -17,7 +17,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #if __has_include(<hardware_interface/hardware_interface/version.h>)
 #include <hardware_interface/hardware_interface/version.h>
 #else
@@ -72,7 +72,7 @@ TEST(TestTopicBasedSystem, load_topic_based_system_2dof)
 
 int main(int argc, char** argv)
 {
-  testing::InitGoogleTest(&argc, argv);
+  testing::InitGoogleMock(&argc, argv);
   rclcpp::init(argc, argv);
 
   return RUN_ALL_TESTS();

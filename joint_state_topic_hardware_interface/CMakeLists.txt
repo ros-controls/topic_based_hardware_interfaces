@@ -58,12 +58,12 @@ install(
 #############
 
 if(BUILD_TESTING)
-  find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_cmake_gmock REQUIRED)
   find_package(ament_cmake_pytest REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
   find_package(ros_testing REQUIRED)
 
-  ament_add_gtest(joint_state_topic_hardware_interface_test test/joint_state_topic_hardware_interface_test.cpp)
+  ament_add_gmock(joint_state_topic_hardware_interface_test test/joint_state_topic_hardware_interface_test.cpp)
   target_link_libraries(joint_state_topic_hardware_interface_test
                         ${PROJECT_NAME}
                         angles::angles
