@@ -41,6 +41,11 @@ CallbackReturn CMTopicSystem::on_init(const hardware_interface::HardwareComponen
 
 hardware_interface::return_type CMTopicSystem::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
 {
+  if (latest_pal_values_.names_version == 0 || pal_statistics_names_per_topic_.empty()) {
+    // no data received yet
+    return hardware_interface::return_type::OK;
+  }
+
   auto it = pal_statistics_names_per_topic_.find(latest_pal_values_.names_version);
   auto end_it = pal_statistics_names_per_topic_.end();
   if (it != end_it)
