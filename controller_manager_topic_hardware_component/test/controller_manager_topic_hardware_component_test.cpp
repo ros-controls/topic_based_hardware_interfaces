@@ -31,7 +31,7 @@
 TEST(TestTopicBasedSystem, load_topic_based_system_2dof)
 {
   const std::string hardware_system_2dof_topic_based =
-    R"(
+      R"(
    <ros2_control name="hardware_component_name" type="system">
     <hardware>
       <plugin>controller_manager_topic_hardware_component/CMTopicSystem</plugin>
@@ -60,8 +60,7 @@ TEST(TestTopicBasedSystem, load_topic_based_system_2dof)
   </ros2_control>
 )";
   auto urdf =
-    ros2_control_test_assets::urdf_head + hardware_system_2dof_topic_based +
-    ros2_control_test_assets::urdf_tail;
+      ros2_control_test_assets::urdf_head + hardware_system_2dof_topic_based + ros2_control_test_assets::urdf_tail;
   auto node = std::make_shared<rclcpp::Node>("test_topic_based_system");
 
 // The API of the ResourceManager has changed in hardware_interface 5.3.0
@@ -71,23 +70,24 @@ TEST(TestTopicBasedSystem, load_topic_based_system_2dof)
   params.clock = node->get_clock();
   params.logger = node->get_logger();
   params.executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  try {
+  try
+  {
     hardware_interface::ResourceManager rm(params, true);
-  } catch (const std::exception & e) {
+  }
+  catch (const std::exception& e)
+  {
     std::cerr << "Exception caught: " << e.what() << std::endl;
     FAIL() << "Exception thrown during ResourceManager construction: " << e.what();
   }
 #elif HARDWARE_INTERFACE_VERSION_GTE(4, 13, 0)
-  ASSERT_NO_THROW(
-    hardware_interface::ResourceManager rm(
-      urdf, node->get_node_clock_interface(),
-      node->get_node_logging_interface(), false));
+  ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf, node->get_node_clock_interface(),
+                                                         node->get_node_logging_interface(), false));
 #else
   ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf, true, false));
 #endif
 }
 
-int main(int argc, char ** argv)
+int main(int argc, char** argv)
 {
   testing::InitGoogleMock(&argc, argv);
   rclcpp::init(argc, argv);

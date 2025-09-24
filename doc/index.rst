@@ -13,7 +13,7 @@ The CM Topic System implements a ros2_control ``hardware_interface::SystemInterf
 topics of type ``pal_statistics_msgs::msg::StatisticsNames`` and ``pal_statistics_msgs::msg::StatisticsValues``,
 and sets its state interface to the received values (if present).
 
-Per default, the ros2_control controller manager publishes these topics to ``/controller_manager/introspection_data/names`` 
+Per default, the ros2_control controller manager publishes these topics to ``/controller_manager/introspection_data/names``
 and ``/controller_manager/introspection_data/values``.
 
 This component serves as a possibility to replay ROS bags and inject the states from a hardware component into the ros2_control stack.
