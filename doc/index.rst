@@ -1,7 +1,7 @@
 :github_url: https://github.com/ros-controls/topic_based_hardware_interfaces/blob/{REPOS_FILE_BRANCH}/doc/index.rst
 
-topic_based_hardware_interface
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+topic_based_hardware_interfaces
+###############################
 The Joint State Topic Based System implements a ros2_control ``hardware_interface::SystemInterface`` supporting command and state interfaces through the ROS topic communication layer.
 
 .. include:: ../joint_state_topic_hardware_interface/README.md
@@ -27,11 +27,22 @@ For example, use ``ros2bag`` CLI to extract these two topics via
             /controller_manager/introspection_data/values:=/<hardware_component_name>/values
 
 Note that with this setup the current time of your OS is used and not published from the ROS bag.
+If you want to control the speed of playback, run
+
+* your ros2_control_node with ``--ros-args -p --use_sim_time:=true``
+* and the ``--rate`` and ``--clock`` options, for example
+
+  .. code:: bash
+
+    ros2 bag play <bag_file> --rate 2.0 --clock 100 \
+      --topics /controller_manager/introspection_data/names /controller_manager/introspection_data/values \
+      --remap /controller_manager/introspection_data/names:=/<hardware_component_name>/names\
+              /controller_manager/introspection_data/values:=/<hardware_component_name>/values
 
 ROS subscribers
 ----------------------------
 * /<hardware_component_name>/names: ``pal_statistics_msgs::msg::StatisticsNames``
-* /<hardware_component_name>/values:  ``pal_statistics_msgs::msg::StatisticsValues
+* /<hardware_component_name>/values:  ``pal_statistics_msgs::msg::StatisticsValues``
 
 ros2_control section in URDF
 ----------------------------
