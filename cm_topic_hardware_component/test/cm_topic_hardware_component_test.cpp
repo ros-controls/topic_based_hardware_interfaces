@@ -34,7 +34,7 @@ TEST(TestTopicBasedSystem, load_topic_based_system_2dof)
       R"(
    <ros2_control name="hardware_component_name" type="system">
     <hardware>
-      <plugin>controller_manager_topic_hardware_component/CMTopicSystem</plugin>
+      <plugin>cm_topic_hardware_component/CMTopicSystem</plugin>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>

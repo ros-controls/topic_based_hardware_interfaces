@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(controller_manager_topic_hardware_component CXX)
+project(cm_topic_hardware_component CXX)
 
 find_package(ros2_control_cmake REQUIRED)
 set_compiler_options()
@@ -29,7 +29,7 @@ endforeach()
 # Declare a C++ library
 add_library(
   ${PROJECT_NAME}
-  src/controller_manager_topic_hardware_component.cpp
+  src/cm_topic_hardware_component.cpp
 )
 target_link_libraries(${PROJECT_NAME} PUBLIC
                       angles::angles
@@ -63,8 +63,8 @@ if(BUILD_TESTING)
 
   # GTests
   # TODO(anyone): reactivate if https://github.com/ros-controls/topic_based_hardware_interfaces/issues/14 is fixed
-  ament_add_gmock(controller_manager_topic_hardware_component_test test/controller_manager_topic_hardware_component_test.cpp)
-  target_link_libraries(controller_manager_topic_hardware_component_test
+  ament_add_gmock(cm_topic_hardware_component_test test/cm_topic_hardware_component_test.cpp)
+  target_link_libraries(cm_topic_hardware_component_test
                         ${PROJECT_NAME}
                         rclcpp::rclcpp
                         hardware_interface::hardware_interface
@@ -72,7 +72,7 @@ if(BUILD_TESTING)
                         ros2_control_test_assets::ros2_control_test_assets)
 endif()
 
-pluginlib_export_plugin_description_file(hardware_interface controller_manager_topic_hardware_component_plugin_description.xml)
+pluginlib_export_plugin_description_file(hardware_interface cm_topic_hardware_component_plugin_description.xml)
 ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()

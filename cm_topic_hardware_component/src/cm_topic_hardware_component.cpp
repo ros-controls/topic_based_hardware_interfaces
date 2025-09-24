@@ -14,9 +14,9 @@
 
 #include <string>
 
-#include <controller_manager_topic_hardware_component/controller_manager_topic_hardware_component.hpp>
+#include <cm_topic_hardware_component/cm_topic_hardware_component.hpp>
 
-namespace controller_manager_topic_hardware_component
+namespace cm_topic_hardware_component
 {
 
 CallbackReturn CMTopicSystem::on_init(const hardware_interface::HardwareComponentInterfaceParams& params)
@@ -83,7 +83,7 @@ hardware_interface::return_type CMTopicSystem::write(const rclcpp::Time& /*time*
   // nothing to do here
   return hardware_interface::return_type::OK;
 }
-}  // end namespace controller_manager_topic_hardware_component
+}  // end namespace cm_topic_hardware_component
 
 #include "pluginlib/class_list_macros.hpp"
-PLUGINLIB_EXPORT_CLASS(controller_manager_topic_hardware_component::CMTopicSystem, hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(cm_topic_hardware_component::CMTopicSystem, hardware_interface::SystemInterface)

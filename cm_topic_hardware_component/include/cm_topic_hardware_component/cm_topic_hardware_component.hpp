@@ -28,7 +28,7 @@
 #include <pal_statistics_msgs/msg/statistics_names.hpp>
 #include <pal_statistics_msgs/msg/statistics_values.hpp>
 
-namespace controller_manager_topic_hardware_component
+namespace cm_topic_hardware_component
 {
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
@@ -48,4 +48,4 @@ private:
   std::unordered_map<uint32_t, std::vector<std::string>> pal_statistics_names_per_topic_;
 };
 
-}  // namespace controller_manager_topic_hardware_component
+}  // namespace cm_topic_hardware_component

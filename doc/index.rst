@@ -7,7 +7,7 @@ The Joint State Topic Based System implements a ros2_control ``hardware_interfac
 .. include:: ../joint_state_topic_hardware_interface/README.md
    :parser: myst_parser.sphinx_
 
-controller_manager_topic_hardware_component
+cm_topic_hardware_component
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The CM Topic System implements a ros2_control ``hardware_interface::SystemInterface`` subscribing to
 topics of type ``pal_statistics_msgs::msg::StatisticsNames`` and ``pal_statistics_msgs::msg::StatisticsValues``,
@@ -51,7 +51,7 @@ ros2_control section in URDF
 
   <ros2_control name="hardware_component_name" type="system">
     <hardware>
-      <plugin>controller_manager_topic_hardware_component/CMTopicSystem</plugin>
+      <plugin>cm_topic_hardware_component/CMTopicSystem</plugin>
     </hardware>
     <joint name="joint_1">
       <command_interface name="position"/>
