@@ -59,9 +59,7 @@ install(
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
-  find_package(ament_cmake_pytest REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
-  find_package(ros_testing REQUIRED)
 
   # GTests
   # TODO(anyone): reactivate if https://github.com/ros-controls/topic_based_hardware_interfaces/issues/14 is fixed
@@ -72,15 +70,6 @@ if(BUILD_TESTING)
                         hardware_interface::hardware_interface
                         ${pal_statistics_msgs_TARGETS}
                         ros2_control_test_assets::ros2_control_test_assets)
-
-  # Integration tests
-  # TODO(anyone): reactivate if https://github.com/ros-controls/topic_based_hardware_interfaces/issues/21 is fixed
-  # add_ros_test(
-  #   test/ros2_control.test.py
-  #   TIMEOUT
-  #   120
-  #   ARGS
-  #   test_file:=${CMAKE_CURRENT_SOURCE_DIR}/test/test_topic_based_robot.py)
 endif()
 
 pluginlib_export_plugin_description_file(hardware_interface controller_manager_topic_hardware_component_plugin_description.xml)
