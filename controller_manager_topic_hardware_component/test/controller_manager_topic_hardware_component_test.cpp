@@ -64,7 +64,7 @@ TEST(TestTopicBasedSystem, load_topic_based_system_2dof)
   auto node = std::make_shared<rclcpp::Node>("test_topic_based_system");
   auto executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
 
-// The API of the ResourceManager has changed in hardware_interface 5.3.0
+// The API of the ResourceManager has changed in hardware_interface 4.13.0
 #if HARDWARE_INTERFACE_VERSION_GTE(4, 13, 0)
   hardware_interface::ResourceManagerParams params;
   params.robot_description = urdf;
