@@ -14,10 +14,9 @@
 
 #include <cmath>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
-#include <gtest/gtest.h>
+#include "gmock/gmock.h"
 #if __has_include(<hardware_interface/hardware_interface/version.h>)
 #include <hardware_interface/hardware_interface/version.h>
 #else
@@ -32,29 +31,37 @@
 TEST(TestTopicBasedSystem, load_topic_based_system_2dof)
 {
   const std::string hardware_system_2dof_topic_based =
-      R"(
-  <ros2_control name="JointStateTopicBasedSystem2dof" type="system">
+    R"(
+   <ros2_control name="hardware_component_name" type="system">
     <hardware>
-      <plugin>joint_state_topic_hardware_interface/JointStateTopicSystem</plugin>
-      <param name="joint_commands_topic">/topic_based_joint_commands</param>
-      <param name="joint_states_topic">/topic_based_custom_joint_states</param>
+      <plugin>controller_manager_topic_hardware_component/CMTopicSystem</plugin>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <state_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">0.2</param>
+      </state_interface>
       <state_interface name="velocity"/>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <state_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">0.3</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint3">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">0.1</param>
+      </state_interface>
       <state_interface name="velocity"/>
     </joint>
   </ros2_control>
 )";
   auto urdf =
-      ros2_control_test_assets::urdf_head + hardware_system_2dof_topic_based + ros2_control_test_assets::urdf_tail;
+    ros2_control_test_assets::urdf_head + hardware_system_2dof_topic_based +
+    ros2_control_test_assets::urdf_tail;
   auto node = std::make_shared<rclcpp::Node>("test_topic_based_system");
 
 // The API of the ResourceManager has changed in hardware_interface 5.3.0
@@ -64,19 +71,25 @@ TEST(TestTopicBasedSystem, load_topic_based_system_2dof)
   params.clock = node->get_clock();
   params.logger = node->get_logger();
   params.executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  ASSERT_NO_THROW(hardware_interface::ResourceManager rm(params, true));
-// The API of the ResourceManager has changed in hardware_interface 4.13.0
+  try {
+    hardware_interface::ResourceManager rm(params, true);
+  } catch (const std::exception & e) {
+    std::cerr << "Exception caught: " << e.what() << std::endl;
+    FAIL() << "Exception thrown during ResourceManager construction: " << e.what();
+  }
 #elif HARDWARE_INTERFACE_VERSION_GTE(4, 13, 0)
-  ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf, node->get_node_clock_interface(),
-                                                         node->get_node_logging_interface(), false));
+  ASSERT_NO_THROW(
+    hardware_interface::ResourceManager rm(
+      urdf, node->get_node_clock_interface(),
+      node->get_node_logging_interface(), false));
 #else
   ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf, true, false));
 #endif
 }
 
-int main(int argc, char** argv)
+int main(int argc, char ** argv)
 {
-  testing::InitGoogleTest(&argc, argv);
+  testing::InitGoogleMock(&argc, argv);
   rclcpp::init(argc, argv);
 
   return RUN_ALL_TESTS();
