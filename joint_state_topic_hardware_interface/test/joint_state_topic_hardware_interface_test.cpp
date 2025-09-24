@@ -17,7 +17,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #if __has_include(<hardware_interface/hardware_interface/version.h>)
 #include <hardware_interface/hardware_interface/version.h>
 #else
@@ -57,18 +57,22 @@ TEST(TestTopicBasedSystem, load_topic_based_system_2dof)
       ros2_control_test_assets::urdf_head + hardware_system_2dof_topic_based + ros2_control_test_assets::urdf_tail;
   auto node = std::make_shared<rclcpp::Node>("test_topic_based_system");
 
-// The API of the ResourceManager has changed in hardware_interface 5.3.0
-#if HARDWARE_INTERFACE_VERSION_GTE(5, 3, 0)
+// The API of the ResourceManager has changed in hardware_interface 4.13.0
+#if HARDWARE_INTERFACE_VERSION_GTE(4, 13, 0)
   hardware_interface::ResourceManagerParams params;
   params.robot_description = urdf;
   params.clock = node->get_clock();
   params.logger = node->get_logger();
   params.executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  ASSERT_NO_THROW(hardware_interface::ResourceManager rm(params, true));
-// The API of the ResourceManager has changed in hardware_interface 4.13.0
-#elif HARDWARE_INTERFACE_VERSION_GTE(4, 13, 0)
-  ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf, node->get_node_clock_interface(),
-                                                         node->get_node_logging_interface(), false));
+  try
+  {
+    hardware_interface::ResourceManager rm(params, true);
+  }
+  catch (const std::exception& e)
+  {
+    std::cerr << "Exception caught: " << e.what() << std::endl;
+    FAIL() << "Exception thrown during ResourceManager construction: " << e.what();
+  }
 #else
   ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf, true, false));
 #endif
@@ -76,7 +80,7 @@ TEST(TestTopicBasedSystem, load_topic_based_system_2dof)
 
 int main(int argc, char** argv)
 {
-  testing::InitGoogleTest(&argc, argv);
+  testing::InitGoogleMock(&argc, argv);
   rclcpp::init(argc, argv);
 
   return RUN_ALL_TESTS();
