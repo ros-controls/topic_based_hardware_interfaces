@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>cm_topic_hardware_component</name>
+  <version>0.2.0</version>
+  <description>ros2_control hardware interface using pal_statistics messages</description>
+
+  <maintainer email="marq.razz@gmail.com">Marq Rasmussen</maintainer>
+  <maintainer email="jafar.uruc@gmail.com">Jafar Uruc</maintainer>
+  <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
+
+  <author email="christoph.froehlich@ait.ac.at">Christoph Froehlich</author>
+
+  <license>Apache License 2.0</license>
+
+  <url type="website">https://github.com/ros-controls/topic_based_hardware_interfaces</url>
+  <url type="bugtracker">
+    https://github.com/ros-controlsros-controls/topic_based_hardware_interfaces/issues</url>
+  <url type="repository">https://github.com/ros-controlsros-controls/topic_based_hardware_interfaces</url>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>ros2_control_cmake</build_depend>
+
+  <depend>rclcpp</depend>
+  <depend>hardware_interface</depend>
+  <depend>pal_statistics_msgs</depend>
+
+  <test_depend>ament_cmake_gmock</test_depend>
+  <test_depend>hardware_interface</test_depend>
+  <test_depend>ros2_control_test_assets</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
