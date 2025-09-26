@@ -67,8 +67,8 @@ private:
   std::vector<MimicJoint> mimic_joints_;
 
   /// The size of this vector is (standard_interfaces_.size() x nr_joints)
-  std::vector<std::vector<double>> joint_commands_;
-  std::vector<std::vector<double>> joint_states_;
+  std::vector<std::vector<double>> joint_command_values_;
+  std::vector<std::vector<double>> joint_state_values_;
 
   // If the difference between the current joint state and joint command is less than this value,
   // the joint command will not be published.
