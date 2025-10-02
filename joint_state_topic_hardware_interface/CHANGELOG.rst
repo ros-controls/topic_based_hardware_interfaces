@@ -2,8 +2,8 @@
 Changelog for package joint_state_topic_hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.1 (2025-10-02)
+------------------
 * Activate test and fix it for jazzy (`#34 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/34>`_)
 * Bump version of pre-commit hooks (`#26 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/26>`_)
 * Contributors: Christoph Fröhlich, github-actions[bot]
