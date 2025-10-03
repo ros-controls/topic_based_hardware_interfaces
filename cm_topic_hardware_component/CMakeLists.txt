@@ -62,7 +62,6 @@ if(BUILD_TESTING)
   find_package(ros2_control_test_assets REQUIRED)
 
   # GTests
-  # TODO(anyone): reactivate if https://github.com/ros-controls/topic_based_hardware_interfaces/issues/14 is fixed
   ament_add_gmock(cm_topic_hardware_component_test test/cm_topic_hardware_component_test.cpp)
   target_link_libraries(cm_topic_hardware_component_test
                         ${PROJECT_NAME}
