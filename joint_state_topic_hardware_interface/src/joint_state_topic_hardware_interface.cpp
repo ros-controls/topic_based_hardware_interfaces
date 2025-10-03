@@ -55,12 +55,12 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
   }
 
   // Initialize storage for all joints' standard interfaces, regardless of their existence and set all values to nan
-  joint_commands_.resize(standard_interfaces_.size());
-  joint_states_.resize(standard_interfaces_.size());
+  joint_command_values_.resize(standard_interfaces_.size());
+  joint_state_values_.resize(standard_interfaces_.size());
   for (auto i = 0u; i < standard_interfaces_.size(); i++)
   {
-    joint_commands_[i].resize(get_hardware_info().joints.size(), 0.0);
-    joint_states_[i].resize(get_hardware_info().joints.size(), 0.0);
+    joint_command_values_[i].resize(get_hardware_info().joints.size(), 0.0);
+    joint_state_values_[i].resize(get_hardware_info().joints.size(), 0.0);
   }
 
   // Initial command values
@@ -77,8 +77,8 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
         // Check the initial_value param is used
         if (!interface.initial_value.empty())
         {
-          joint_states_[index][i] = std::stod(interface.initial_value);
-          joint_commands_[index][i] = std::stod(interface.initial_value);
+          joint_state_values_[index][i] = std::stod(interface.initial_value);
+          joint_command_values_[index][i] = std::stod(interface.initial_value);
         }
       }
     }
@@ -134,7 +134,7 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
       [this](const sensor_msgs::msg::JointState::SharedPtr joint_state) { latest_joint_state_ = *joint_state; });
 
   // if the values on the `joint_states_topic` are wrapped between -2*pi and 2*pi (like they are in Isaac Sim)
-  // sum the total joint rotation returned on the `joint_states_` interface
+  // sum the total joint rotation returned on the `joint_state_values_` interface
   if (get_hardware_parameter("sum_wrapped_joint_states", "false") == "true")
   {
     sum_wrapped_joint_states_ = true;
@@ -154,7 +154,7 @@ std::vector<hardware_interface::StateInterface> JointStateTopicSystem::export_st
     for (const auto& interface : joint.state_interfaces)
     {
       // Add interface: if not in the standard list then use "other" interface list
-      if (!getInterface(joint.name, interface.name, i, joint_states_, state_interfaces))
+      if (!getInterface(joint.name, interface.name, i, joint_state_values_, state_interfaces))
       {
         throw std::runtime_error("Interface is not found in the standard list.");
       }
@@ -174,7 +174,7 @@ std::vector<hardware_interface::CommandInterface> JointStateTopicSystem::export_
     const auto& joint = get_hardware_info().joints[i];
     for (const auto& interface : joint.command_interfaces)
     {
-      if (!getInterface(joint.name, interface.name, i, joint_commands_, command_interfaces))
+      if (!getInterface(joint.name, interface.name, i, joint_command_values_, command_interfaces))
       {
         throw std::runtime_error("Interface is not found in the standard list.");
       }
@@ -198,26 +198,26 @@ hardware_interface::return_type JointStateTopicSystem::read(const rclcpp::Time& 
       auto j = static_cast<std::size_t>(std::distance(joints.begin(), it));
       if (sum_wrapped_joint_states_)
       {
-        sumRotationFromMinus2PiTo2Pi(latest_joint_state_.position[i], joint_states_[POSITION_INTERFACE_INDEX][j]);
+        sumRotationFromMinus2PiTo2Pi(latest_joint_state_.position[i], joint_state_values_[POSITION_INTERFACE_INDEX][j]);
       }
       else
       {
-        joint_states_[POSITION_INTERFACE_INDEX][j] = latest_joint_state_.position[i];
+        joint_state_values_[POSITION_INTERFACE_INDEX][j] = latest_joint_state_.position[i];
       }
       if (!latest_joint_state_.velocity.empty())
       {
-        joint_states_[VELOCITY_INTERFACE_INDEX][j] = latest_joint_state_.velocity[i];
+        joint_state_values_[VELOCITY_INTERFACE_INDEX][j] = latest_joint_state_.velocity[i];
       }
       if (!latest_joint_state_.effort.empty())
       {
-        joint_states_[EFFORT_INTERFACE_INDEX][j] = latest_joint_state_.effort[i];
+        joint_state_values_[EFFORT_INTERFACE_INDEX][j] = latest_joint_state_.effort[i];
       }
     }
   }
 
   for (const auto& mimic_joint : mimic_joints_)
   {
-    for (auto& joint_state : joint_states_)
+    for (auto& joint_state : joint_state_values_)
     {
       joint_state[mimic_joint.joint_index] = mimic_joint.multiplier * joint_state[mimic_joint.mimicked_joint_index];
     }
@@ -247,8 +247,8 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
   // To avoid spamming TopicBased's joint command topic we check the difference between the joint states and
   // the current joint commands, if it's smaller than a threshold we don't publish it.
   const auto diff = std::transform_reduce(
-      joint_states_[POSITION_INTERFACE_INDEX].cbegin(), joint_states_[POSITION_INTERFACE_INDEX].cend(),
-      joint_commands_[POSITION_INTERFACE_INDEX].cbegin(), 0.0,
+      joint_state_values_[POSITION_INTERFACE_INDEX].cbegin(), joint_state_values_[POSITION_INTERFACE_INDEX].cend(),
+      joint_command_values_[POSITION_INTERFACE_INDEX].cbegin(), 0.0,
       [](const auto d1, const auto d2) { return std::abs(d1) + std::abs(d2); }, std::minus<double>{});
   if (diff <= trigger_joint_command_threshold_)
   {
@@ -265,15 +265,15 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
     {
       if (interface.name == hardware_interface::HW_IF_POSITION)
       {
-        joint_state.position.push_back(joint_commands_[POSITION_INTERFACE_INDEX][i]);
+        joint_state.position.push_back(joint_command_values_[POSITION_INTERFACE_INDEX][i]);
       }
       else if (interface.name == hardware_interface::HW_IF_VELOCITY)
       {
-        joint_state.velocity.push_back(joint_commands_[VELOCITY_INTERFACE_INDEX][i]);
+        joint_state.velocity.push_back(joint_command_values_[VELOCITY_INTERFACE_INDEX][i]);
       }
       else if (interface.name == hardware_interface::HW_IF_EFFORT)
       {
-        joint_state.effort.push_back(joint_commands_[EFFORT_INTERFACE_INDEX][i]);
+        joint_state.effort.push_back(joint_command_values_[EFFORT_INTERFACE_INDEX][i]);
       }
       else
       {
