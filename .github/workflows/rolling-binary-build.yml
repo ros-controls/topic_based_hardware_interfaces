@@ -4,7 +4,7 @@ name: Rolling - Binary Build
 
 on:
   workflow_dispatch:
-  pull_request:
+  pull_request: &event
     branches:
       - main
     paths:
@@ -20,22 +20,7 @@ on:
       - 'topic_based_hardware_interfaces.kilted.repos'
       - 'topic_based_hardware_interfaces.jazzy.repos'
       - '**.xml'
-  push:
-    branches:
-      - main
-    paths:
-      - '**.hpp'
-      - '**.h'
-      - '**.cpp'
-      - '**.py'
-      - '**.yaml'
-      - '.github/workflows/rolling-binary-build.yml'
-      - '**/package.xml'
-      - '**/CMakeLists.txt'
-      - 'topic_based_hardware_interfaces.rolling.repos'
-      - 'topic_based_hardware_interfaces.kilted.repos'
-      - 'topic_based_hardware_interfaces.jazzy.repos'
-      - '**.xml'
+  push: *event
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 1 * * MON-FRI'

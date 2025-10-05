@@ -1,7 +1,7 @@
 name: Rolling - Coverage Build
 on:
   workflow_dispatch:
-  push:
+  pull_request: &event
     branches:
       - main
     paths:
@@ -15,20 +15,7 @@ on:
       - '**/CMakeLists.txt'
       - 'topic_based_hardware_interfaces.rolling.repos'
       - '**.xml'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - '**.hpp'
-      - '**.h'
-      - '**.cpp'
-      - '**.py'
-      - '**.yaml'
-      - '.github/workflows/rolling-coverage-build.yml'
-      - '**/package.xml'
-      - '**/CMakeLists.txt'
-      - 'topic_based_hardware_interfaces.rolling.repos'
-      - '**.xml'
+  push: *event
 
 concurrency:
   # cancel previous runs of the same workflow, except for pushes on given branches
