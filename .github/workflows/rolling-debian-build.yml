@@ -4,6 +4,19 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '**.yaml'
+      - '.github/workflows/rolling-debian-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'topic_based_hardware_interfaces.rolling.repos'
+      - 'topic_based_hardware_interfaces.kilted.repos'
+      - 'topic_based_hardware_interfaces.jazzy.repos'
+      - '**.xml'
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '33 2 * * MON-FRI'
