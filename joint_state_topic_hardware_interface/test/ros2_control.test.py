@@ -52,14 +52,12 @@ def generate_test_description():
         [
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    [
-                        PathJoinSubstitution(
-                            [
-                                str(Path(os.path.realpath(__file__)).parent),
-                                "control.launch.py",
-                            ],
-                        ),
-                    ],
+                    PathJoinSubstitution(
+                        [
+                            str(Path(os.path.realpath(__file__)).parent),
+                            "control.launch.py",
+                        ],
+                    ),
                 ),
             ),
             KeepAliveProc(),
