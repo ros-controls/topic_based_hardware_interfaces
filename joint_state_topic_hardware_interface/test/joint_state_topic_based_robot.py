@@ -112,7 +112,7 @@ class JointStateTopicBasedRobot(Node):
         ):
             self.get_logger().warning(
                 f"Waiting for current joint states from topic '{self.current_joint_state_subscriber.topic_name}': {self.get_current_joint_state()} to be equal to the commanded positions: {joint_positions}...",
-                )            
+            )
 
     def timer_callback(self):
         self.actual_joint_state_publisher.publish(
@@ -121,4 +121,3 @@ class JointStateTopicBasedRobot(Node):
                 position=self.joint_positions,
             ),
         )
-
