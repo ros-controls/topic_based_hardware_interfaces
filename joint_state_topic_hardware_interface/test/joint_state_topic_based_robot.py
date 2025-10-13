@@ -29,16 +29,10 @@ class JointStateTopicBasedRobot(Node):
     def __init__(self, joint_names: list[str]) -> None:
         super().__init__("topic_based_robot")
         self.joint_names = joint_names.copy()
+        self.joint_positions = [0.0] * len(joint_names)
         self.last_joint_command = []
         self.current_joint_state = []
         self.callback_group = ReentrantCallbackGroup()
-        # Publisher for the robot internal joint state (Ground truth)
-        self.actual_joint_state_publisher = self.create_publisher(
-            JointState,
-            "topic_based_joint_states",
-            qos_profile=qos_profile_sensor_data,
-            callback_group=self.callback_group,
-        )
         # Subscriber for the joint state commands from ros2_control
         self.desired_joint_state_subscriber = self.create_subscription(
             JointState,
@@ -53,6 +47,13 @@ class JointStateTopicBasedRobot(Node):
             "joint_states",
             self.joint_states_callback,
             qos_profile_system_default,
+            callback_group=self.callback_group,
+        )
+        # Publisher for the robot internal joint state (Ground truth)
+        self.actual_joint_state_publisher = self.create_publisher(
+            JointState,
+            "topic_based_joint_states",
+            qos_profile=qos_profile_sensor_data,
             callback_group=self.callback_group,
         )
 
@@ -102,12 +103,8 @@ class JointStateTopicBasedRobot(Node):
         joint_positions: list[float] | np.ndarray,
     ) -> None:
         """Set the joint positions of the robot."""
-        self.actual_joint_state_publisher.publish(
-            JointState(
-                name=list(self.joint_names),
-                position=joint_positions,
-            ),
-        )
+        self.joint_positions = joint_positions
+        self.timer = self.create_timer(0.1, self.timer_callback)
         while not np.allclose(
             self.get_current_joint_state(),
             joint_positions,
@@ -115,4 +112,13 @@ class JointStateTopicBasedRobot(Node):
         ):
             self.get_logger().warning(
                 f"Waiting for current joint states from topic '{self.current_joint_state_subscriber.topic_name}': {self.get_current_joint_state()} to be equal to the commanded positions: {joint_positions}...",
-                )
+                )            
+
+    def timer_callback(self):
+        self.actual_joint_state_publisher.publish(
+            JointState(
+                name=list(self.joint_names),
+                position=self.joint_positions,
+            ),
+        )
+
