@@ -61,14 +61,14 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
 
-  # ament_add_gmock(joint_state_topic_hardware_interface_test test/joint_state_topic_hardware_interface_test.cpp)
-  # target_link_libraries(joint_state_topic_hardware_interface_test
-  #                       ${PROJECT_NAME}
-  #                       angles::angles
-  #                       rclcpp::rclcpp
-  #                       hardware_interface::hardware_interface
-  #                       ${sensor_msgs_TARGETS}
-  #                       ros2_control_test_assets::ros2_control_test_assets)
+  ament_add_gmock(joint_state_topic_hardware_interface_test test/joint_state_topic_hardware_interface_test.cpp)
+  target_link_libraries(joint_state_topic_hardware_interface_test
+                        ${PROJECT_NAME}
+                        angles::angles
+                        rclcpp::rclcpp
+                        hardware_interface::hardware_interface
+                        ${sensor_msgs_TARGETS}
+                        ros2_control_test_assets::ros2_control_test_assets)
 
   # Integration tests
   find_package(ament_cmake_ros REQUIRED)
