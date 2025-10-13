@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import os
 import sys
 import unittest
@@ -22,6 +21,10 @@ import launch_testing
 import launch_testing.markers
 import pytest
 import rclpy
+from controller_manager.test_utils import (
+    check_controllers_running,
+    check_if_js_published,
+)
 from launch import LaunchDescription
 from launch.actions import (
     IncludeLaunchDescription,
@@ -35,11 +38,6 @@ from launch_testing.util import KeepAliveProc
 
 # JointStateTopicBasedRobot is in the same folder as this test
 sys.path.insert(0, str(Path(__file__).parent))
-
-from controller_manager.test_utils import (
-    check_controllers_running,
-    check_if_js_published,
-)
 from joint_state_topic_based_robot import JointStateTopicBasedRobot
 
 
