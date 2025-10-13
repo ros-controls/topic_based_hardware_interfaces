@@ -39,7 +39,7 @@ class JointStateTopicBasedRobot(Node):
             qos_profile=qos_profile_sensor_data,
             callback_group=self.callback_group,
         )
-        # Subscriber for the desired joint state from the controller
+        # Subscriber for the joint state commands from ros2_control
         self.desired_joint_state_subscriber = self.create_subscription(
             JointState,
             "topic_based_joint_commands",
@@ -47,7 +47,7 @@ class JointStateTopicBasedRobot(Node):
             QoSProfile(depth=1),
             callback_group=self.callback_group,
         )
-        # Reported joint state from ros2_control
+        # Reported joint state from joint_state_broadcaster
         self.current_joint_state_subscriber = self.create_subscription(
             JointState,
             "joint_states",
@@ -82,7 +82,7 @@ class JointStateTopicBasedRobot(Node):
                 throttle_duration_sec=2.0,
                 skip_first=True,
             )
-            rclpy.spin_once(self, timeout_sec=0.0)
+            rclpy.spin_once(self, timeout_sec=1.0)
         return self.last_joint_command
 
     def get_current_joint_state(self) -> OrderedDict[str, float]:
@@ -94,7 +94,7 @@ class JointStateTopicBasedRobot(Node):
                 throttle_duration_sec=2.0,
                 skip_first=True,
             )
-            rclpy.spin_once(self, timeout_sec=0.0)
+            rclpy.spin_once(self, timeout_sec=1.0)
         return self.current_joint_state
 
     def set_joint_positions(
@@ -113,4 +113,6 @@ class JointStateTopicBasedRobot(Node):
             joint_positions,
             atol=1e-3,
         ):
-            rclpy.spin_once(self, timeout_sec=0.0)
+            self.get_logger().warning(
+                f"Waiting for current joint states from topic '{self.current_joint_state_subscriber.topic_name}': {self.get_current_joint_state()} to be equal to the commanded positions: {joint_positions}...",
+                )

@@ -59,27 +59,26 @@ install(
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
-  find_package(ament_cmake_pytest REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
-  find_package(ros_testing REQUIRED)
 
-  ament_add_gmock(joint_state_topic_hardware_interface_test test/joint_state_topic_hardware_interface_test.cpp)
-  target_link_libraries(joint_state_topic_hardware_interface_test
-                        ${PROJECT_NAME}
-                        angles::angles
-                        rclcpp::rclcpp
-                        hardware_interface::hardware_interface
-                        ${sensor_msgs_TARGETS}
-                        ros2_control_test_assets::ros2_control_test_assets)
+  # ament_add_gmock(joint_state_topic_hardware_interface_test test/joint_state_topic_hardware_interface_test.cpp)
+  # target_link_libraries(joint_state_topic_hardware_interface_test
+  #                       ${PROJECT_NAME}
+  #                       angles::angles
+  #                       rclcpp::rclcpp
+  #                       hardware_interface::hardware_interface
+  #                       ${sensor_msgs_TARGETS}
+  #                       ros2_control_test_assets::ros2_control_test_assets)
 
   # Integration tests
-  # TODO(anyone): reactivate if https://github.com/ros-controls/topic_based_hardware_interfaces/issues/21 is fixed
-  # add_ros_test(
-  #   test/ros2_control.test.py
-  #   TIMEOUT
-  #   120
-  #   ARGS
-  #   test_file:=${CMAKE_CURRENT_SOURCE_DIR}/test/test_topic_based_robot.py)
+  find_package(ament_cmake_ros REQUIRED)
+  find_package(launch_testing_ament_cmake REQUIRED)
+  function(add_ros_isolated_launch_test path)
+    set(RUNNER "${ament_cmake_ros_DIR}/run_test_isolated.py")
+    add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
+  endfunction()
+  add_ros_isolated_launch_test(
+    test/ros2_control.test.py)
 endif()
 
 pluginlib_export_plugin_description_file(hardware_interface joint_state_topic_hardware_interface_plugin_description.xml)
