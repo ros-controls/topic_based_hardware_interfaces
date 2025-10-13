@@ -14,6 +14,7 @@
 
 
 from collections import OrderedDict
+from typing import Union
 
 import numpy as np
 import rclpy
@@ -100,7 +101,7 @@ class JointStateTopicBasedRobot(Node):
 
     def set_joint_positions(
         self,
-        joint_positions: list[float] | np.ndarray,
+        joint_positions: Union[list[float], np.ndarray],
     ) -> None:
         """Set the joint positions of the robot."""
         self.joint_positions = joint_positions
