@@ -28,6 +28,7 @@
 
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ament_cmake_ros</test_depend>
+  <test_depend>control_msgs</test_depend>
   <test_depend>controller_manager</test_depend>
   <test_depend>joint_state_broadcaster</test_depend>
   <test_depend>joint_trajectory_controller</test_depend>
@@ -38,6 +39,7 @@
   <test_depend>rclpy</test_depend>
   <test_depend>robot_state_publisher</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>
+  <test_depend>topic_tools</test_depend>
   <test_depend>xacro</test_depend>
 
   <export>

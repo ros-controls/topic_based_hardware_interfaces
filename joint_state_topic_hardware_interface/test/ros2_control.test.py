@@ -13,17 +13,19 @@
 # limitations under the License.
 
 import os
-import sys
 import unittest
+from collections import OrderedDict
 from pathlib import Path
 
 import launch_testing
 import launch_testing.markers
 import pytest
 import rclpy
+from ament_index_python.packages import get_package_prefix
 from controller_manager.test_utils import (
     check_controllers_running,
     check_if_js_published,
+    check_node_running,
 )
 from launch import LaunchDescription
 from launch.actions import (
@@ -33,12 +35,11 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
     PathJoinSubstitution,
 )
+from launch_ros.actions import Node
 from launch_testing.actions import ReadyToTest
 from launch_testing.util import KeepAliveProc
-
-# JointStateTopicBasedRobot is in the same folder as this test
-sys.path.insert(0, str(Path(__file__).parent))
-from joint_state_topic_based_robot import JointStateTopicBasedRobot
+from rclpy.qos import qos_profile_system_default
+from sensor_msgs.msg import JointState
 
 
 # This function specifies the processes to be run for our test
@@ -60,6 +61,12 @@ def generate_test_description():
                     ),
                 ),
             ),
+            Node(
+                package="topic_tools",
+                executable="relay",
+                output="screen",
+                arguments=["/topic_based_joint_commands", "/topic_based_joint_states"],
+            ),
             KeepAliveProc(),
             ReadyToTest(),
         ],
@@ -76,36 +83,89 @@ class TestFixture(unittest.TestCase):
         rclpy.shutdown()
 
     def setUp(self):
-        self.robot = JointStateTopicBasedRobot(["joint_1", "joint_2", "joint_3"])
+        self.node = rclpy.create_node("test_node")
+
+        # Reported joint state from joint_state_broadcaster
+        self.current_joint_state_subscriber = self.node.create_subscription(
+            JointState,
+            "joint_states",
+            self.joint_states_callback,
+            qos_profile_system_default,
+        )
+
+        self.joint_names = ["joint_1", "joint_2", "joint_3"]
 
     def tearDown(self):
-        self.robot.destroy_node()
+        self.node.destroy_node()
 
     def test_controller_running(self, proc_output):
         cnames = ["joint_trajectory_controller", "joint_state_broadcaster"]
-        check_controllers_running(self.robot, cnames)
+        check_node_running(self.node, "relay")
+        check_controllers_running(self.node, cnames)
 
     def test_check_if_msgs_published(self):
-        check_if_js_published("/joint_states", ["joint_1", "joint_2", "joint_3"])
+        check_if_js_published("/joint_states", self.joint_names)
 
-    def test_main(self, proc_output):
+    def test_main(self, launch_service, proc_info, proc_output):
         # By default the joint_states should have the initial_value from rrr.urdf.xacro
-        self.robot.get_logger().info("Checking initial joint states...")
-        current_joint_state = self.robot.get_current_joint_state()
+        self.node.get_logger().info("Checking initial joint states...")
+        current_joint_state = self.get_current_joint_state()
         urdf_initial_values = [0.2, 0.3, 0.1]
         assert current_joint_state == urdf_initial_values, (
             f"{current_joint_state=} != {urdf_initial_values=}"
         )
 
-        # Test setting the robot joint states
-        self.robot.get_logger().info("Set joint positions...")
-        joint_state = [0.1, 0.2, 0.3]
-        self.robot.set_joint_positions(joint_state)
-        self.robot.get_logger().info("Checking current joint states...")
-        current_joint_state = self.robot.get_current_joint_state()
-        assert current_joint_state == joint_state, (
-            f"{current_joint_state=} != {joint_state=}"
+        # Test setting the robot joint states via controller
+        # example_position is run directly here as it was not installed
+        pkg_name = "joint_state_topic_hardware_interface"
+        proc_action = Node(
+            executable=os.path.join(
+                get_package_prefix(pkg_name).replace("install", "build"),
+                "example_position",
+            ),
+            output="screen",
         )
+
+        with launch_testing.tools.launch_process(
+            launch_service, proc_action, proc_info, proc_output
+        ):
+            proc_info.assertWaitForShutdown(process=proc_action, timeout=300)
+            launch_testing.asserts.assertExitCodes(
+                proc_info, process=proc_action, allowable_exit_codes=[0]
+            )
+
+        self.node.get_logger().info("Checking final joint states...")
+        current_joint_state = self.get_current_joint_state()
+        final_values = [0.0, 0.3, 0.1]  # joint_2 and joint_3 should remain unchanged
+        assert current_joint_state == final_values, (
+            f"{current_joint_state=} != {final_values=}"
+        )
+
+    def joint_states_callback(self, msg: JointState):
+        self.current_joint_state = self.filter_joint_state_msg(msg)
+
+    def get_current_joint_state(self) -> OrderedDict[str, float]:
+        """Get the current joint state reported by ros2_control on joint_states topic."""
+        self.current_joint_state = []
+        while len(self.current_joint_state) == 0:
+            self.node.get_logger().warning(
+                f"Waiting for current joint states from topic '{self.current_joint_state_subscriber.topic_name}'...",
+                throttle_duration_sec=2.0,
+                skip_first=True,
+            )
+            rclpy.spin_once(self.node, timeout_sec=1.0)
+        return self.current_joint_state
+
+    def filter_joint_state_msg(self, msg: JointState):
+        joint_states = []
+        for joint_name in self.joint_names:
+            try:
+                index = msg.name.index(joint_name)
+            except ValueError:
+                msg = f"Joint name '{joint_name}' not in input keys {msg.name}"
+                raise ValueError(msg) from None
+            joint_states.append(msg.position[index])
+        return joint_states
 
 
 @launch_testing.post_shutdown_test()
