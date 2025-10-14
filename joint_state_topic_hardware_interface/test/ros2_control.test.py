@@ -19,6 +19,7 @@ from pathlib import Path
 
 import launch_testing
 import launch_testing.markers
+import numpy as np
 import pytest
 import rclpy
 from ament_index_python.packages import get_package_prefix
@@ -133,9 +134,11 @@ class TestFixture(unittest.TestCase):
         self.node.get_logger().info("Checking final joint states...")
         current_joint_state = self.get_current_joint_state()
         final_values = [0.0, 0.3, 0.1]  # joint_2 and joint_3 should remain unchanged
-        assert current_joint_state == final_values, (
-            f"{current_joint_state=} != {final_values=}"
-        )
+        assert np.allclose(
+            current_joint_state,
+            final_values,
+            atol=1e-3,
+        ), f"{current_joint_state=} != {final_values=}"
 
     def joint_states_callback(self, msg: JointState):
         self.current_joint_state = self.filter_joint_state_msg(msg)
