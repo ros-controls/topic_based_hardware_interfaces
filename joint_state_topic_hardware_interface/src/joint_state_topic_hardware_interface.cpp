@@ -92,17 +92,17 @@ hardware_interface::return_type JointStateTopicSystem::read(const rclcpp::Time& 
   const auto& joints = get_hardware_info().joints;
   for (std::size_t i = 0; i < latest_joint_state_.name.size(); ++i)
   {
-    auto it = std::find_if(joints.begin(), joints.end(),
-                           [&joint_name = std::as_const(latest_joint_state_.name[i])](
-                               const hardware_interface::ComponentInfo& info) { return joint_name == info.name; });
+    const auto it = std::find_if(joints.begin(), joints.end(),
+                                 [name = latest_joint_state_.name[i]](const hardware_interface::ComponentInfo& joint) {
+                                   return joint.name == name;
+                                 });
     if (it != joints.end())
     {
-      auto it2 = std::find_if(get_hardware_info().mimic_joints.begin(), get_hardware_info().mimic_joints.end(),
-                              [idx = static_cast<std::size_t>(std::distance(joints.begin(), it))](
-                                  const hardware_interface::MimicJoint& mimic_joint) {
-                                return idx == mimic_joint.joint_index;
-                              });
-      if (it2 != get_hardware_info().mimic_joints.end())
+      if (std::find_if(get_hardware_info().mimic_joints.begin(), get_hardware_info().mimic_joints.end(),
+                       [idx = static_cast<std::size_t>(std::distance(joints.begin(), it))](
+                           const hardware_interface::MimicJoint& mimic_joint) {
+                         return idx == mimic_joint.joint_index;
+                       }) != get_hardware_info().mimic_joints.end())
       {
         // mimic joints are updated at the end of this function
         continue;
@@ -167,19 +167,29 @@ hardware_interface::return_type JointStateTopicSystem::read(const rclcpp::Time& 
 hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time& /*time*/,
                                                              const rclcpp::Duration& /*period*/)
 {
+  const auto& joints = get_hardware_info().joints;
   // To avoid spamming TopicBased's joint command topic we check the difference between the joint states and
   // the current joint commands, if it's smaller than a threshold we don't publish it.
-  // const auto diff = std::transform_reduce(
-  //     joint_state_values_[POSITION_INTERFACE_INDEX].cbegin(), joint_state_values_[POSITION_INTERFACE_INDEX].cend(),
-  //     joint_command_values_[POSITION_INTERFACE_INDEX].cbegin(), 0.0,
-  //     [](const auto d1, const auto d2) { return std::abs(d1) + std::abs(d2); }, std::minus<double>{});
-  // if (diff <= trigger_joint_command_threshold_)
-  // {
-  //   return hardware_interface::return_type::OK;
-  // }
+  auto diff = 0.0;
+  for (std::size_t i = 0; i < joints.size(); ++i)
+  {
+    for (const auto& interface : joints[i].command_interfaces)
+    {
+      if (interface.name != hardware_interface::HW_IF_POSITION)
+      {
+        continue;
+      }
+      // sum the absolute difference for all joints
+      diff += std::abs(get_state(joints[i].name + "/" + interface.name) -
+                       get_command(joints[i].name + "/" + interface.name));
+    }
+  }
+  if (diff <= trigger_joint_command_threshold_)
+  {
+    return hardware_interface::return_type::OK;
+  }
 
   sensor_msgs::msg::JointState joint_state;
-  const auto& joints = get_hardware_info().joints;
   for (std::size_t i = 0; i < joints.size(); ++i)
   {
     joint_state.name.push_back(joints[i].name);
