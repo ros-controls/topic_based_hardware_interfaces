@@ -53,7 +53,7 @@ def generate_test_description():
                     PathJoinSubstitution(
                         [
                             str(Path(os.path.realpath(__file__)).parent),
-                            "control.launch.py",
+                            "rrr.launch.py",
                         ],
                     ),
                 ),

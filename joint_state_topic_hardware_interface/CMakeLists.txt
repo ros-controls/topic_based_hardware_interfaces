@@ -75,7 +75,7 @@ if(BUILD_TESTING)
   find_package(launch_testing_ament_cmake REQUIRED)
   find_package(rclcpp_action REQUIRED)
   find_package(control_msgs REQUIRED)
-  add_executable(jtc_client_position test/jtc_client_position.cpp)
+  add_executable(jtc_client_position test/rrr/jtc_client_position.cpp)
   target_link_libraries(jtc_client_position PUBLIC
     ${control_msgs_TARGETS}
     rclcpp::rclcpp
@@ -86,7 +86,7 @@ if(BUILD_TESTING)
     add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
   endfunction()
   add_ros_isolated_launch_test(
-    test/rrr_position.test.py)
+    test/rrr/position.test.py)
 endif()
 
 pluginlib_export_plugin_description_file(hardware_interface joint_state_topic_hardware_interface_plugin_description.xml)
