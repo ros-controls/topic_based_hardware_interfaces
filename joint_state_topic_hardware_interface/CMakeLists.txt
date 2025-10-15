@@ -86,7 +86,7 @@ if(BUILD_TESTING)
     add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
   endfunction()
   add_ros_isolated_launch_test(
-    test/position.test.py)
+    test/rrr_position.test.py)
 endif()
 
 pluginlib_export_plugin_description_file(hardware_interface joint_state_topic_hardware_interface_plugin_description.xml)
