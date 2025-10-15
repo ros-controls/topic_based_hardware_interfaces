@@ -38,6 +38,8 @@ class JointStateTopicSystem : public hardware_interface::SystemInterface
 public:
   CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams& params) override;
 
+  CallbackReturn on_activate(const rclcpp_lifecycle::State& /*previous_state*/) override;
+
   hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
   hardware_interface::return_type write(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) override;
