@@ -86,39 +86,6 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
   return CallbackReturn::SUCCESS;
 }
 
-hardware_interface::CallbackReturn JointStateTopicSystem::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
-{
-  // initialize mimic joints
-  // TODO(christophfroehlich): move that to the handles
-  const auto& joints = get_hardware_info().joints;
-  for (const auto& mimic_joint : get_hardware_info().mimic_joints)
-  {
-    const auto& mimic_joint_name = joints.at(mimic_joint.joint_index).name;
-    const auto& mimicked_joint_name = joints.at(mimic_joint.mimicked_joint_index).name;
-    if (joint_state_interfaces_.find(mimic_joint_name + "/" + hardware_interface::HW_IF_POSITION) !=
-        joint_state_interfaces_.end())
-    {
-      set_state(mimic_joint_name + "/" + hardware_interface::HW_IF_POSITION,
-                mimic_joint.offset +
-                    mimic_joint.multiplier * get_state(mimicked_joint_name + "/" + hardware_interface::HW_IF_POSITION));
-    }
-    if (joint_state_interfaces_.find(mimic_joint_name + "/" + hardware_interface::HW_IF_VELOCITY) !=
-        joint_state_interfaces_.end())
-    {
-      set_state(mimic_joint_name + "/" + hardware_interface::HW_IF_VELOCITY,
-                mimic_joint.multiplier * get_state(mimicked_joint_name + "/" + hardware_interface::HW_IF_VELOCITY));
-    }
-    if (joint_state_interfaces_.find(mimic_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION) !=
-        joint_state_interfaces_.end())
-    {
-      set_state(mimic_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION,
-                mimic_joint.multiplier * get_state(mimicked_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION));
-    }
-  }
-
-  return CallbackReturn::SUCCESS;
-}
-
 hardware_interface::return_type JointStateTopicSystem::read(const rclcpp::Time& /*time*/,
                                                             const rclcpp::Duration& /*period*/)
 {

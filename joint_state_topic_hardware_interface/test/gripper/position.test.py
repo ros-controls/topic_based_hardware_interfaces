@@ -133,7 +133,7 @@ class TestFixture(unittest.TestCase):
 
         self.node.get_logger().info("Checking final joint states...")
         current_joint_state = self.get_current_joint_state()
-        final_values = [0.0, 0.0]
+        final_values = [0.09, 0.09]
         assert np.allclose(
             current_joint_state,
             final_values,

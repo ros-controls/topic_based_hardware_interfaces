@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
   publisher->publish(commands);
   std::this_thread::sleep_for(1s);
 
-  commands.data[0] = 0;
+  commands.data[0] = 0.09;
   publisher->publish(commands);
   std::this_thread::sleep_for(1s);
   rclcpp::shutdown();
