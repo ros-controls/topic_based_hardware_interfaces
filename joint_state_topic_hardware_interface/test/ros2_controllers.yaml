@@ -24,3 +24,6 @@ joint_trajectory_controller:
     constraints:
       stopped_velocity_tolerance: 0.0
       goal_time: 0.0
+      joint_1:
+        trajectory: 0.1
+        goal: 0.01

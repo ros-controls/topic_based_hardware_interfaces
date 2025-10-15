@@ -113,12 +113,12 @@ class TestFixture(unittest.TestCase):
         )
 
         # Test setting the robot joint states via controller
-        # example_position is run directly here as it was not installed
+        # jtc_client_position was not installed, call it directly from build space
         pkg_name = "joint_state_topic_hardware_interface"
         proc_action = Node(
             executable=os.path.join(
                 get_package_prefix(pkg_name).replace("install", "build"),
-                "example_position",
+                "jtc_client_position",
             ),
             output="screen",
         )

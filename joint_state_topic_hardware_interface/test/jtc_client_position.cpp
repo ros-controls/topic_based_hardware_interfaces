@@ -80,7 +80,7 @@ void common_feedback(rclcpp_action::ClientGoalHandle<control_msgs::action::Follo
 
   if (ct_goals_reached < desired_goals.size())
   {
-    if (fabs(feedback->actual.positions[0] - desired_goals.at(ct_goals_reached)) < 0.1)
+    if (fabs(feedback->actual.positions[0] - desired_goals.at(ct_goals_reached)) <= 0.05)
     {
       std::cout << "Goal # " << ct_goals_reached << ": " << desired_goals.at(ct_goals_reached) << " reached"
                 << std::endl;

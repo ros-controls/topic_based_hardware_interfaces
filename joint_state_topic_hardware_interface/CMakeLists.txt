@@ -75,8 +75,8 @@ if(BUILD_TESTING)
   find_package(launch_testing_ament_cmake REQUIRED)
   find_package(rclcpp_action REQUIRED)
   find_package(control_msgs REQUIRED)
-  add_executable(example_position test/example_position.cpp)
-  target_link_libraries(example_position PUBLIC
+  add_executable(jtc_client_position test/jtc_client_position.cpp)
+  target_link_libraries(jtc_client_position PUBLIC
     ${control_msgs_TARGETS}
     rclcpp::rclcpp
     rclcpp_action::rclcpp_action
