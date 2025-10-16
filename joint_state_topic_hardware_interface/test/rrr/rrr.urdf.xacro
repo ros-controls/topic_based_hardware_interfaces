@@ -109,7 +109,7 @@
     <axis xyz="0 0 1" />
     <limit lower="0" upper="0" effort="0" velocity="0" />
   </joint>
-  <ros2_control name="name" type="system">
+  <ros2_control name="rrr_joint_state_system" type="system">
     <hardware>
       <plugin>joint_state_topic_hardware_interface/JointStateTopicSystem</plugin>
       <param name="joint_commands_topic">/topic_based_joint_commands</param>
