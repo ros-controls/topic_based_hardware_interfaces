@@ -45,7 +45,7 @@ hardware_interface::return_type CMTopicSystem::read(const rclcpp::Time& /*time*/
 {
   if (latest_pal_values_.names_version == 0 || pal_statistics_names_per_topic_.empty())
   {
-    // no data received yet
+    RCLCPP_WARN_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000, "No data received yet");
     return hardware_interface::return_type::OK;
   }
 
