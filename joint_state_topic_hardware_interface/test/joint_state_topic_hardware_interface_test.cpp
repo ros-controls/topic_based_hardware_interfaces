@@ -143,11 +143,6 @@ class TestableResourceManager : public hardware_interface::ResourceManager
 public:
   friend TestTopicBasedSystem;
 
-  FRIEND_TEST(TestTopicBasedSystem, load_topic_based_system_2dof);
-  FRIEND_TEST(TestTopicBasedSystem, load_topic_based_system_2dof_missing_position);
-  FRIEND_TEST(TestTopicBasedSystem, load_topic_based_system_with_mimic_joint);
-  FRIEND_TEST(TestTopicBasedSystem, TestTopicBasedSystem_load_topic_based_system_with_mimic_joint_missing_position);
-
   // The API of the ResourceManager has changed in hardware_interface 4.13.0
 #if HARDWARE_INTERFACE_VERSION_GTE(4, 13, 0)
   explicit TestableResourceManager(const hardware_interface::ResourceManagerParams& params, bool load)
@@ -317,7 +312,7 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_2dof)
   EXPECT_EQ(j2_v_c.get_optional().value(), 0.14);
 }
 
-TEST_F(TestTopicBasedSystem, load_topic_based_system_2dof_velocity_only)
+TEST_F(TestTopicBasedSystem, topic_based_system_2dof_velocity_only)
 {
   const std::string hardware_system_2dof_topic_based =
       R"(
@@ -384,16 +379,31 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_2dof_velocity_only)
   EXPECT_EQ(j1_v_c.get_optional().value(), 0.12);
   EXPECT_EQ(j2_v_c.get_optional().value(), 0.14);
 
-  publish({ "joint1", "joint2" }, { 0.21, 0.23 }, { 0.22, 0.24 });
-
-  wait_for_msg();
-
   // Reading should fail as position interface is missing
+  publish({ "joint1", "joint2" }, { 0.21, 0.23 }, { 0.22, 0.24 });
+  wait_for_msg();
   ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
   ASSERT_EQ(ret, hardware_interface::return_type::ERROR);
+
+  // Reading should succeed now because position field is empty
+  activate_components(*rm_, { "JointStateTopicBasedSystem2dof" });
+  publish({ "joint1", "joint2" }, {}, { 0.22, 0.24 });
+  wait_for_msg(std::chrono::milliseconds{ 100 });
+  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+
+  // new states should have been updated from topic
+  EXPECT_EQ(j1_v_s.get_optional().value(), 0.22);
+  EXPECT_EQ(j2_v_s.get_optional().value(), 0.24);
+
+  // commands should remain unchanged
+  EXPECT_EQ(j1_v_c.get_optional().value(), 0.12);
+  EXPECT_EQ(j2_v_c.get_optional().value(), 0.14);
 }
 
-TEST_F(TestTopicBasedSystem, load_topic_based_system_with_mimic_joint)
+TEST_F(TestTopicBasedSystem, topic_based_system_with_mimic_joint)
 {
   const std::string hardware_system_2dof_with_mimic_joint =
       R"(
@@ -485,7 +495,7 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_with_mimic_joint)
   EXPECT_EQ(j1_p_c.get_optional().value(), 0.11);
 }
 
-TEST_F(TestTopicBasedSystem, load_topic_based_system_with_mimic_joint_missing_position)
+TEST_F(TestTopicBasedSystem, topic_based_system_with_mimic_joint_missing_position)
 {
   const std::string hardware_system_2dof_with_mimic_joint =
       R"(

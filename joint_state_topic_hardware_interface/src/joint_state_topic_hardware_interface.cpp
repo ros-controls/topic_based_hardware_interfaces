@@ -108,7 +108,7 @@ hardware_interface::return_type JointStateTopicSystem::read(const rclcpp::Time& 
         continue;
       }
 
-      if (std::isfinite(latest_joint_state_.position.at(i)))
+      if (!latest_joint_state_.position.empty() && std::isfinite(latest_joint_state_.position.at(i)))
       {
         if (sum_wrapped_joint_states_)
         {
