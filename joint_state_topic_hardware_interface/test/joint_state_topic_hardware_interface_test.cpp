@@ -29,12 +29,17 @@
 #include <rclcpp_lifecycle/state.hpp>
 #include <ros2_control_test_assets/descriptions.hpp>
 
+#include "sensor_msgs/msg/joint_state.hpp"
+
 namespace
 {
 const auto TIME = rclcpp::Time(0);
 const auto PERIOD = rclcpp::Duration::from_seconds(0.1);  // 0.1 seconds for easier math
 const auto COMPARE_DELTA = 0.0001;
 }  // namespace
+
+// Forward declaration
+class TestableResourceManager;
 
 class TestTopicBasedSystem : public ::testing::Test
 {
@@ -51,7 +56,11 @@ protected:
 
   void SetUp() override
   {
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
     node_ = std::make_shared<rclcpp::Node>(::testing::UnitTest::GetInstance()->current_test_info()->name());
+
+    js_publisher_ = node_->create_publisher<sensor_msgs::msg::JointState>("/topic_based_custom_joint_states",
+                                                                          rclcpp::SystemDefaultsQoS());
 
     INITIALIZE_ROS2_CONTROL_INTROSPECTION_REGISTRY(node_, hardware_interface::DEFAULT_INTROSPECTION_TOPIC,
                                                    hardware_interface::DEFAULT_REGISTRY_KEY);
@@ -63,7 +72,72 @@ protected:
   }
 
   rclcpp::Node::SharedPtr node_;
+  rclcpp::Executor::SharedPtr executor_;
+  std::unique_ptr<TestableResourceManager> rm_;
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr js_publisher_;
+
+  /// Publish joint_state_message
+  /**
+   *  names - names of joints
+   *  points - vector of trajectory-velocities. One point per controlled joint
+   */
+  void publish(const std::vector<std::string>& joint_names = {}, const std::vector<double>& points_positions = {},
+               const std::vector<double>& points_velocities = {}, const std::vector<double>& points_effort = {})
+  {
+    int wait_count = 0;
+    const auto topic = js_publisher_->get_topic_name();
+    while (node_->count_subscribers(topic) == 0)
+    {
+      if (wait_count >= 5)
+      {
+        auto error_msg = std::string("publishing to ") + topic + " but no node subscribes to it";
+        throw std::runtime_error(error_msg);
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      ++wait_count;
+    }
+
+    sensor_msgs::msg::JointState state_msg;
+    state_msg.name = joint_names;
+
+    state_msg.position = points_positions;
+    state_msg.velocity = points_velocities;
+    state_msg.effort = points_effort;
+
+    js_publisher_->publish(state_msg);
+  }
+
+  /**
+   * @brief wait_for_msg block until a new JointState is received.
+   * Requires that the executor is not spinned elsewhere between the
+   *  message publication and the call to this function
+   */
+  void wait_for_msg(const std::chrono::milliseconds& timeout = std::chrono::milliseconds{ 10 })
+  {
+    auto until = node_->get_clock()->now() + timeout;
+    while (node_->get_clock()->now() < until)
+    {
+      executor_->spin_some();
+      std::this_thread::sleep_for(std::chrono::microseconds(10));
+    }
+  }
+
+  void init_rm(const std::string& urdf)
+  {
+    // The API of the ResourceManager has changed in hardware_interface 4.13.0
+#if HARDWARE_INTERFACE_VERSION_GTE(4, 13, 0)
+    hardware_interface::ResourceManagerParams params;
+    params.robot_description = urdf;
+    params.clock = node_->get_clock();
+    params.logger = node_->get_logger();
+    params.executor = executor_;
+    rm_ = std::make_unique<TestableResourceManager>(params, true);
+#else
+    rm_ = std::make_unique<TestableResourceManager>(urdf, true, false);
+#endif
+  }
 };
+
 class TestableResourceManager : public hardware_interface::ResourceManager
 {
 public:
@@ -128,21 +202,6 @@ auto deactivate_components = [](TestableResourceManager& rm,
                        hardware_interface::lifecycle_state_names::INACTIVE);
 };
 
-TestableResourceManager init_rm(rclcpp::Node::SharedPtr node, const std::string& urdf)
-{
-  // The API of the ResourceManager has changed in hardware_interface 4.13.0
-#if HARDWARE_INTERFACE_VERSION_GTE(4, 13, 0)
-  hardware_interface::ResourceManagerParams params;
-  params.robot_description = urdf;
-  params.clock = node->get_clock();
-  params.logger = node->get_logger();
-  params.executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  return TestableResourceManager(params, true);
-#else
-  return TestableResourceManager(urdf, true, false);
-#endif
-}
-
 TEST_F(TestTopicBasedSystem, load_topic_based_system_2dof)
 {
   const std::string hardware_system_2dof_topic_based =
@@ -174,34 +233,34 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_2dof)
   auto urdf =
       ros2_control_test_assets::urdf_head + hardware_system_2dof_topic_based + ros2_control_test_assets::urdf_tail;
 
-  TestableResourceManager rm = init_rm(node_, urdf);
+  init_rm(urdf);
 
   // Activate components to get all interfaces available
-  activate_components(rm, { "JointStateTopicBasedSystem2dof" });
+  activate_components(*rm_, { "JointStateTopicBasedSystem2dof" });
 
   // Check interfaces
-  EXPECT_EQ(1u, rm.system_components_size());
-  ASSERT_EQ(4u, rm.state_interface_keys().size());
-  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
-  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
-  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
-  EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
+  EXPECT_EQ(1u, rm_->system_components_size());
+  ASSERT_EQ(4u, rm_->state_interface_keys().size());
+  EXPECT_TRUE(rm_->state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint2/velocity"));
 
-  ASSERT_EQ(4u, rm.command_interface_keys().size());
-  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
-  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
-  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
-  EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
+  ASSERT_EQ(4u, rm_->command_interface_keys().size());
+  EXPECT_TRUE(rm_->state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint2/velocity"));
 
   // Check initial values
-  hardware_interface::LoanedStateInterface j1_p_s = rm.claim_state_interface("joint1/position");
-  hardware_interface::LoanedStateInterface j1_v_s = rm.claim_state_interface("joint1/velocity");
-  hardware_interface::LoanedStateInterface j2_p_s = rm.claim_state_interface("joint2/position");
-  hardware_interface::LoanedStateInterface j2_v_s = rm.claim_state_interface("joint2/velocity");
-  hardware_interface::LoanedCommandInterface j1_p_c = rm.claim_command_interface("joint1/position");
-  hardware_interface::LoanedCommandInterface j1_v_c = rm.claim_command_interface("joint1/velocity");
-  hardware_interface::LoanedCommandInterface j2_p_c = rm.claim_command_interface("joint2/position");
-  hardware_interface::LoanedCommandInterface j2_v_c = rm.claim_command_interface("joint2/velocity");
+  hardware_interface::LoanedStateInterface j1_p_s = rm_->claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1_v_s = rm_->claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedStateInterface j2_p_s = rm_->claim_state_interface("joint2/position");
+  hardware_interface::LoanedStateInterface j2_v_s = rm_->claim_state_interface("joint2/velocity");
+  hardware_interface::LoanedCommandInterface j1_p_c = rm_->claim_command_interface("joint1/position");
+  hardware_interface::LoanedCommandInterface j1_v_c = rm_->claim_command_interface("joint1/velocity");
+  hardware_interface::LoanedCommandInterface j2_p_c = rm_->claim_command_interface("joint2/position");
+  hardware_interface::LoanedCommandInterface j2_v_c = rm_->claim_command_interface("joint2/velocity");
 
   EXPECT_EQ(j1_p_s.get_optional().value(), 1.57);
   EXPECT_TRUE(std::isnan(j1_v_s.get_optional().value()));
@@ -219,9 +278,9 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_2dof)
   ASSERT_TRUE(j2_v_c.set_value(0.14));
 
   hardware_interface::return_type ret;
-  ASSERT_NO_THROW(ret = rm.read(TIME, PERIOD).result);
+  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
   ASSERT_EQ(ret, hardware_interface::return_type::OK);
-  ASSERT_NO_THROW(ret = rm.write(TIME, PERIOD).result);
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
   ASSERT_EQ(ret, hardware_interface::return_type::OK);
 
   // command is not propagated to state until topic from robot is received
@@ -235,9 +294,30 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_2dof)
   EXPECT_EQ(j1_v_c.get_optional().value(), 0.12);
   EXPECT_EQ(j2_p_c.get_optional().value(), 0.13);
   EXPECT_EQ(j2_v_c.get_optional().value(), 0.14);
+
+  publish({ "joint1", "joint2" }, { 0.21, 0.23 }, { 0.22, 0.24 });
+
+  wait_for_msg();
+
+  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+
+  // new states should have been updated from topic
+  EXPECT_EQ(j1_p_s.get_optional().value(), 0.21);
+  EXPECT_EQ(j1_v_s.get_optional().value(), 0.22);
+  EXPECT_EQ(j2_p_s.get_optional().value(), 0.23);
+  EXPECT_EQ(j2_v_s.get_optional().value(), 0.24);
+
+  // commands should remain unchanged
+  EXPECT_EQ(j1_p_c.get_optional().value(), 0.11);
+  EXPECT_EQ(j1_v_c.get_optional().value(), 0.12);
+  EXPECT_EQ(j2_p_c.get_optional().value(), 0.13);
+  EXPECT_EQ(j2_v_c.get_optional().value(), 0.14);
 }
 
-TEST_F(TestTopicBasedSystem, load_topic_based_system_2dof_missing_position)
+TEST_F(TestTopicBasedSystem, load_topic_based_system_2dof_velocity_only)
 {
   const std::string hardware_system_2dof_topic_based =
       R"(
@@ -260,26 +340,26 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_2dof_missing_position)
   auto urdf =
       ros2_control_test_assets::urdf_head + hardware_system_2dof_topic_based + ros2_control_test_assets::urdf_tail;
 
-  TestableResourceManager rm = init_rm(node_, urdf);
+  init_rm(urdf);
 
   // Activate components to get all interfaces available
-  activate_components(rm, { "JointStateTopicBasedSystem2dof" });
+  activate_components(*rm_, { "JointStateTopicBasedSystem2dof" });
 
   // Check interfaces
-  EXPECT_EQ(1u, rm.system_components_size());
-  ASSERT_EQ(2u, rm.state_interface_keys().size());
-  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
-  EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
+  EXPECT_EQ(1u, rm_->system_components_size());
+  ASSERT_EQ(2u, rm_->state_interface_keys().size());
+  EXPECT_TRUE(rm_->state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint2/velocity"));
 
-  ASSERT_EQ(2u, rm.command_interface_keys().size());
-  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
-  EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
+  ASSERT_EQ(2u, rm_->command_interface_keys().size());
+  EXPECT_TRUE(rm_->state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint2/velocity"));
 
   // Check initial values
-  hardware_interface::LoanedStateInterface j1_v_s = rm.claim_state_interface("joint1/velocity");
-  hardware_interface::LoanedStateInterface j2_v_s = rm.claim_state_interface("joint2/velocity");
-  hardware_interface::LoanedCommandInterface j1_v_c = rm.claim_command_interface("joint1/velocity");
-  hardware_interface::LoanedCommandInterface j2_v_c = rm.claim_command_interface("joint2/velocity");
+  hardware_interface::LoanedStateInterface j1_v_s = rm_->claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedStateInterface j2_v_s = rm_->claim_state_interface("joint2/velocity");
+  hardware_interface::LoanedCommandInterface j1_v_c = rm_->claim_command_interface("joint1/velocity");
+  hardware_interface::LoanedCommandInterface j2_v_c = rm_->claim_command_interface("joint2/velocity");
 
   EXPECT_TRUE(std::isnan(j1_v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(j2_v_s.get_optional().value()));
@@ -291,9 +371,9 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_2dof_missing_position)
   ASSERT_TRUE(j2_v_c.set_value(0.14));
 
   hardware_interface::return_type ret;
-  ASSERT_NO_THROW(ret = rm.read(TIME, PERIOD).result);
+  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
   ASSERT_EQ(ret, hardware_interface::return_type::OK);
-  ASSERT_NO_THROW(ret = rm.write(TIME, PERIOD).result);
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
   ASSERT_EQ(ret, hardware_interface::return_type::OK);
 
   // command is not propagated to state until topic from robot is received
@@ -303,6 +383,14 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_2dof_missing_position)
 
   EXPECT_EQ(j1_v_c.get_optional().value(), 0.12);
   EXPECT_EQ(j2_v_c.get_optional().value(), 0.14);
+
+  publish({ "joint1", "joint2" }, { 0.21, 0.23 }, { 0.22, 0.24 });
+
+  wait_for_msg();
+
+  // Reading should fail as position interface is missing
+  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::ERROR);
 }
 
 TEST_F(TestTopicBasedSystem, load_topic_based_system_with_mimic_joint)
@@ -331,28 +419,28 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_with_mimic_joint)
   auto urdf = ros2_control_test_assets::urdf_head_mimic + hardware_system_2dof_with_mimic_joint +
               ros2_control_test_assets::urdf_tail;
 
-  TestableResourceManager rm = init_rm(node_, urdf);
+  init_rm(urdf);
 
   // Activate components to get all interfaces available
-  activate_components(rm, { "JointStateTopicBasedSystem2dofMimic" });
+  activate_components(*rm_, { "JointStateTopicBasedSystem2dofMimic" });
 
   // Check interfaces
-  EXPECT_EQ(1u, rm.system_components_size());
-  ASSERT_EQ(4u, rm.state_interface_keys().size());
-  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
-  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
-  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
-  EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
+  EXPECT_EQ(1u, rm_->system_components_size());
+  ASSERT_EQ(4u, rm_->state_interface_keys().size());
+  EXPECT_TRUE(rm_->state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint2/velocity"));
 
-  ASSERT_EQ(1u, rm.command_interface_keys().size());
-  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
+  ASSERT_EQ(1u, rm_->command_interface_keys().size());
+  EXPECT_TRUE(rm_->state_interface_exists("joint1/position"));
 
   // Check initial values
-  hardware_interface::LoanedStateInterface j1_p_s = rm.claim_state_interface("joint1/position");
-  hardware_interface::LoanedStateInterface j1_v_s = rm.claim_state_interface("joint1/velocity");
-  hardware_interface::LoanedStateInterface j2_p_s = rm.claim_state_interface("joint2/position");
-  hardware_interface::LoanedStateInterface j2_v_s = rm.claim_state_interface("joint2/velocity");
-  hardware_interface::LoanedCommandInterface j1_p_c = rm.claim_command_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1_p_s = rm_->claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1_v_s = rm_->claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedStateInterface j2_p_s = rm_->claim_state_interface("joint2/position");
+  hardware_interface::LoanedStateInterface j2_v_s = rm_->claim_state_interface("joint2/velocity");
+  hardware_interface::LoanedCommandInterface j1_p_c = rm_->claim_command_interface("joint1/position");
 
   EXPECT_EQ(j1_p_s.get_optional().value(), 1.57);
   EXPECT_TRUE(std::isnan(j1_v_s.get_optional().value()));
@@ -364,9 +452,9 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_with_mimic_joint)
   ASSERT_TRUE(j1_p_c.set_value(0.11));
 
   hardware_interface::return_type ret;
-  ASSERT_NO_THROW(ret = rm.read(TIME, PERIOD).result);
+  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
   ASSERT_EQ(ret, hardware_interface::return_type::OK);
-  ASSERT_NO_THROW(ret = rm.write(TIME, PERIOD).result);
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
   ASSERT_EQ(ret, hardware_interface::return_type::OK);
 
   // command is not propagated to state until topic from robot is received
@@ -376,6 +464,24 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_with_mimic_joint)
   EXPECT_TRUE(std::isnan(j1_v_s.get_optional().value()));
   EXPECT_EQ(j2_p_s.get_optional().value(), -2 * 1.57);
   EXPECT_TRUE(std::isnan(j2_v_s.get_optional().value()));
+  EXPECT_EQ(j1_p_c.get_optional().value(), 0.11);
+
+  publish({ "joint1", "joint2" }, { 0.21, 0.23 }, { 0.22, 0.24 });
+
+  wait_for_msg();
+
+  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+
+  // new states should have been updated from topic
+  EXPECT_EQ(j1_p_s.get_optional().value(), 0.21);
+  EXPECT_EQ(j1_v_s.get_optional().value(), 0.22);
+  EXPECT_EQ(j2_p_s.get_optional().value(), -2 * 0.21);  // received value ignored due to mimic
+  EXPECT_EQ(j2_v_s.get_optional().value(), -2 * 0.22);  // received value ignored due to mimic
+
+  // commands should remain unchanged
   EXPECT_EQ(j1_p_c.get_optional().value(), 0.11);
 }
 
@@ -404,27 +510,27 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_with_mimic_joint_missing_po
   auto urdf = ros2_control_test_assets::urdf_head_mimic + hardware_system_2dof_with_mimic_joint +
               ros2_control_test_assets::urdf_tail;
 
-  TestableResourceManager rm = init_rm(node_, urdf);
+  init_rm(urdf);
 
   // Activate components to get all interfaces available
-  activate_components(rm, { "JointStateTopicBasedSystem2dofMimic" });
+  activate_components(*rm_, { "JointStateTopicBasedSystem2dofMimic" });
 
   // Check interfaces
-  EXPECT_EQ(1u, rm.system_components_size());
-  ASSERT_EQ(3u, rm.state_interface_keys().size());
-  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
-  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
-  EXPECT_FALSE(rm.state_interface_exists("joint2/position"));
-  EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
+  EXPECT_EQ(1u, rm_->system_components_size());
+  ASSERT_EQ(3u, rm_->state_interface_keys().size());
+  EXPECT_TRUE(rm_->state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint1/velocity"));
+  EXPECT_FALSE(rm_->state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint2/velocity"));
 
-  ASSERT_EQ(1u, rm.command_interface_keys().size());
-  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
+  ASSERT_EQ(1u, rm_->command_interface_keys().size());
+  EXPECT_TRUE(rm_->state_interface_exists("joint1/position"));
 
   // Check initial values
-  hardware_interface::LoanedStateInterface j1_p_s = rm.claim_state_interface("joint1/position");
-  hardware_interface::LoanedStateInterface j1_v_s = rm.claim_state_interface("joint1/velocity");
-  hardware_interface::LoanedStateInterface j2_v_s = rm.claim_state_interface("joint2/velocity");
-  hardware_interface::LoanedCommandInterface j1_p_c = rm.claim_command_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1_p_s = rm_->claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1_v_s = rm_->claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedStateInterface j2_v_s = rm_->claim_state_interface("joint2/velocity");
+  hardware_interface::LoanedCommandInterface j1_p_c = rm_->claim_command_interface("joint1/position");
 
   EXPECT_EQ(j1_p_s.get_optional().value(), 1.57);
   EXPECT_TRUE(std::isnan(j1_v_s.get_optional().value()));
@@ -436,9 +542,9 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_with_mimic_joint_missing_po
 
   // should not throw even if mimic joint is missing position interface
   hardware_interface::return_type ret;
-  ASSERT_NO_THROW(ret = rm.read(TIME, PERIOD).result);
+  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
   ASSERT_EQ(ret, hardware_interface::return_type::OK);
-  ASSERT_NO_THROW(ret = rm.write(TIME, PERIOD).result);
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
   ASSERT_EQ(ret, hardware_interface::return_type::OK);
 
   // command is not propagated to state until topic from robot is received
@@ -446,5 +552,22 @@ TEST_F(TestTopicBasedSystem, load_topic_based_system_with_mimic_joint_missing_po
   EXPECT_EQ(j1_p_s.get_optional().value(), 1.57);
   EXPECT_TRUE(std::isnan(j1_v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(j2_v_s.get_optional().value()));
+  EXPECT_EQ(j1_p_c.get_optional().value(), 0.11);
+
+  publish({ "joint1", "joint2" }, { 0.21, 0.23 }, { 0.22, 0.24 });
+
+  wait_for_msg();
+
+  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+
+  // new states should have been updated from topic
+  EXPECT_EQ(j1_p_s.get_optional().value(), 0.21);
+  EXPECT_EQ(j1_v_s.get_optional().value(), 0.22);
+  EXPECT_EQ(j2_v_s.get_optional().value(), -2 * 0.22);  // received value ignored due to mimic
+
+  // commands should remain unchanged
   EXPECT_EQ(j1_p_c.get_optional().value(), 0.11);
 }
