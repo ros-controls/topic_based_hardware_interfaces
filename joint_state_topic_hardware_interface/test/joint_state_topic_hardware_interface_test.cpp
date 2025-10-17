@@ -379,16 +379,9 @@ TEST_F(TestTopicBasedSystem, topic_based_system_2dof_velocity_only)
   EXPECT_EQ(j1_v_c.get_optional().value(), 0.12);
   EXPECT_EQ(j2_v_c.get_optional().value(), 0.14);
 
-  // Reading should fail as position interface is missing
-  publish({ "joint1", "joint2" }, { 0.21, 0.23 }, { 0.22, 0.24 });
-  wait_for_msg();
-  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
-  ASSERT_EQ(ret, hardware_interface::return_type::ERROR);
-
-  // Reading should succeed now because position field is empty
-  activate_components(*rm_, { "JointStateTopicBasedSystem2dof" });
   publish({ "joint1", "joint2" }, {}, { 0.22, 0.24 });
   wait_for_msg(std::chrono::milliseconds{ 100 });
+
   ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
   ASSERT_EQ(ret, hardware_interface::return_type::OK);
   ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
@@ -401,6 +394,80 @@ TEST_F(TestTopicBasedSystem, topic_based_system_2dof_velocity_only)
   // commands should remain unchanged
   EXPECT_EQ(j1_v_c.get_optional().value(), 0.12);
   EXPECT_EQ(j2_v_c.get_optional().value(), 0.14);
+}
+
+TEST_F(TestTopicBasedSystem, topic_based_system_2dof_velocity_only_inconsistent_topic)
+{
+  const std::string hardware_system_2dof_topic_based =
+      R"(
+  <ros2_control name="JointStateTopicBasedSystem2dof" type="system">
+    <hardware>
+      <plugin>joint_state_topic_hardware_interface/JointStateTopicSystem</plugin>
+      <param name="joint_commands_topic">/topic_based_joint_commands</param>
+      <param name="joint_states_topic">/topic_based_custom_joint_states</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
+  auto urdf =
+      ros2_control_test_assets::urdf_head + hardware_system_2dof_topic_based + ros2_control_test_assets::urdf_tail;
+
+  init_rm(urdf);
+
+  // Activate components to get all interfaces available
+  activate_components(*rm_, { "JointStateTopicBasedSystem2dof" });
+
+  // Check interfaces
+  EXPECT_EQ(1u, rm_->system_components_size());
+  ASSERT_EQ(2u, rm_->state_interface_keys().size());
+  EXPECT_TRUE(rm_->state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint2/velocity"));
+
+  ASSERT_EQ(2u, rm_->command_interface_keys().size());
+  EXPECT_TRUE(rm_->state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm_->state_interface_exists("joint2/velocity"));
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface j1_v_s = rm_->claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedStateInterface j2_v_s = rm_->claim_state_interface("joint2/velocity");
+  hardware_interface::LoanedCommandInterface j1_v_c = rm_->claim_command_interface("joint1/velocity");
+  hardware_interface::LoanedCommandInterface j2_v_c = rm_->claim_command_interface("joint2/velocity");
+
+  EXPECT_TRUE(std::isnan(j1_v_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2_v_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j1_v_c.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2_v_c.get_optional().value()));
+
+  // set some new values in commands
+  ASSERT_TRUE(j1_v_c.set_value(0.12));
+  ASSERT_TRUE(j2_v_c.set_value(0.14));
+
+  hardware_interface::return_type ret;
+  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+
+  // command is not propagated to state until topic from robot is received
+  // same holds for velocity
+  EXPECT_TRUE(std::isnan(j1_v_s.get_optional().value()));
+  EXPECT_TRUE(std::isnan(j2_v_s.get_optional().value()));
+
+  EXPECT_EQ(j1_v_c.get_optional().value(), 0.12);
+  EXPECT_EQ(j2_v_c.get_optional().value(), 0.14);
+
+  // Reading should fail as position interface is missing
+  publish({ "joint1", "joint2" }, { 0.21, 0.23 }, { 0.22, 0.24 });
+  wait_for_msg();
+  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::ERROR);
 }
 
 TEST_F(TestTopicBasedSystem, topic_based_system_with_mimic_joint)
