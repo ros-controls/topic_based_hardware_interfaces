@@ -81,7 +81,7 @@ protected:
    *  names - names of interfaces
    *  points - vector of values
    */
-  void publish(const std::vector<std::string>& if_names, const std::vector<double>& values, int version = 1)
+  void publish(const std::vector<std::string>& if_names, const std::vector<double>& values, unsigned int version = 1u)
   {
     int wait_count = 0;
     const auto topic = names_publisher_->get_topic_name();
@@ -353,7 +353,7 @@ TEST_F(TestTopicBasedSystem, topic_based_system_2dof)
   publish({ "state_interface.joint1/position", "state_interface.joint2/position", "state_interface.joint3/position",
             "state_interface.joint1/velocity", "state_interface.joint2/velocity", "state_interface.joint3/velocity",
             "state_interface.unknown/value", "other.unknown/value" },
-          { 0.21, 0.22, 0.23, 0.31, 0.32, 0.33, 42.0, std::numeric_limits<double>::quiet_NaN() }, 1);
+          { 0.21, 0.22, 0.23, 0.31, 0.32, 0.33, 42.0, std::numeric_limits<double>::quiet_NaN() }, 1u);
 
   std::cout << "Published first set of values." << std::endl;
   wait_for_msg(std::chrono::milliseconds{ 100 });
@@ -389,7 +389,7 @@ TEST_F(TestTopicBasedSystem, topic_based_system_2dof)
   publish({ "state_interface.joint1/position", "state_interface.joint2/position", "state_interface.joint3/position",
             "state_interface.joint1/velocity", "state_interface.joint2/velocity", "state_interface.joint3/velocity",
             "state_interface.flange_analog_IOs/analog_output1", "state_interface.force_sensor/force.x" },
-          { 1.21, 1.22, 1.23, 1.31, 1.32, 1.33, 1.4 }, 2);
+          { 1.21, 1.22, 1.23, 1.31, 1.32, 1.33, 1.4 }, 2u);
 
   wait_for_msg(std::chrono::milliseconds{ 100 });
 
@@ -418,7 +418,7 @@ TEST_F(TestTopicBasedSystem, topic_based_system_2dof)
   publish({ "state_interface.joint1/position", "state_interface.joint2/position", "state_interface.joint3/position",
             "state_interface.joint1/velocity", "state_interface.joint2/velocity", "state_interface.joint3/velocity",
             "state_interface.flange_analog_IOs/analog_output1", "state_interface.force_sensor/force.x" },
-          { 1.21, 1.22, 1.23, 1.31, 1.32, 1.33, 1.4, 1.5 }, 3);
+          { 1.21, 1.22, 1.23, 1.31, 1.32, 1.33, 1.4, 1.5 }, 3u);
 
   wait_for_msg(std::chrono::milliseconds{ 100 });
 
