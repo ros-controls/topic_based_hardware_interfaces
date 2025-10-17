@@ -59,9 +59,7 @@ install(
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
-  find_package(ament_cmake_pytest REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
-  find_package(ros_testing REQUIRED)
 
   ament_add_gmock(joint_state_topic_hardware_interface_test test/joint_state_topic_hardware_interface_test.cpp)
   target_link_libraries(joint_state_topic_hardware_interface_test
@@ -73,13 +71,22 @@ if(BUILD_TESTING)
                         ros2_control_test_assets::ros2_control_test_assets)
 
   # Integration tests
-  # TODO(anyone): reactivate if https://github.com/ros-controls/topic_based_hardware_interfaces/issues/21 is fixed
-  # add_ros_test(
-  #   test/ros2_control.test.py
-  #   TIMEOUT
-  #   120
-  #   ARGS
-  #   test_file:=${CMAKE_CURRENT_SOURCE_DIR}/test/test_topic_based_robot.py)
+  find_package(ament_cmake_ros REQUIRED)
+  find_package(launch_testing_ament_cmake REQUIRED)
+  find_package(rclcpp_action REQUIRED)
+  find_package(control_msgs REQUIRED)
+  add_executable(jtc_client_position test/rrr/jtc_client_position.cpp)
+  target_link_libraries(jtc_client_position PUBLIC
+    ${control_msgs_TARGETS}
+    rclcpp::rclcpp
+    rclcpp_action::rclcpp_action
+  )
+  function(add_ros_isolated_launch_test path)
+    set(RUNNER "${ament_cmake_ros_DIR}/run_test_isolated.py")
+    add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
+  endfunction()
+  add_ros_isolated_launch_test(
+    test/rrr/position.test.py)
 endif()
 
 pluginlib_export_plugin_description_file(hardware_interface joint_state_topic_hardware_interface_plugin_description.xml)
