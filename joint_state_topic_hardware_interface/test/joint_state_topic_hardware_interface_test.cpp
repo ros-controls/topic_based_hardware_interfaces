@@ -13,29 +13,29 @@
 // limitations under the License.
 
 #include <cmath>
+#include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include <gmock/gmock.h>
-#if __has_include(<hardware_interface/hardware_interface/version.h>)
-#include <hardware_interface/hardware_interface/version.h>
-#else
-#include <hardware_interface/version.h>
-#endif
-#include <hardware_interface/resource_manager.hpp>
-#include <rclcpp/node.hpp>
-#include <rclcpp/utilities.hpp>
-#include <rclcpp_lifecycle/state.hpp>
-#include <ros2_control_test_assets/descriptions.hpp>
 
+#if __has_include("hardware_interface/hardware_interface/version.h")
+#include "hardware_interface/hardware_interface/version.h"
+#else
+#include "hardware_interface/version.h"
+#endif
+#include "hardware_interface/resource_manager.hpp"
+#include "rclcpp/executor.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/utilities.hpp"
+#include "rclcpp_lifecycle/state.hpp"
+#include "ros2_control_test_assets/descriptions.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 
 namespace
 {
 const auto TIME = rclcpp::Time(0);
 const auto PERIOD = rclcpp::Duration::from_seconds(0.1);  // 0.1 seconds for easier math
-const auto COMPARE_DELTA = 0.0001;
 }  // namespace
 
 // Forward declaration
