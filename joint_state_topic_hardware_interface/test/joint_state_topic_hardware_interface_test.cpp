@@ -179,20 +179,23 @@ void set_components_state(TestableResourceManager& rm, const std::vector<std::st
   }
 }
 
-auto configure_components = [](TestableResourceManager& rm,
-                               const std::vector<std::string>& components = { "GenericSystem2dof" }) {
+void configure_components(TestableResourceManager& rm,
+                          const std::vector<std::string>& components = { "GenericSystem2dof" })
+{
   set_components_state(rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
                        hardware_interface::lifecycle_state_names::INACTIVE);
 };
 
-auto activate_components = [](TestableResourceManager& rm,
-                              const std::vector<std::string>& components = { "GenericSystem2dof" }) {
+void activate_components(TestableResourceManager& rm,
+                         const std::vector<std::string>& components = { "GenericSystem2dof" })
+{
   set_components_state(rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
                        hardware_interface::lifecycle_state_names::ACTIVE);
 };
 
-auto deactivate_components = [](TestableResourceManager& rm,
-                                const std::vector<std::string>& components = { "GenericSystem2dof" }) {
+void deactivate_components(TestableResourceManager& rm,
+                           const std::vector<std::string>& components = { "GenericSystem2dof" })
+{
   set_components_state(rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
                        hardware_interface::lifecycle_state_names::INACTIVE);
 };
