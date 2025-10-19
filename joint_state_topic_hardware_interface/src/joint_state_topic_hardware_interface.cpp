@@ -140,21 +140,18 @@ hardware_interface::return_type JointStateTopicSystem::read(const rclcpp::Time& 
   {
     const auto& mimic_joint_name = joints.at(mimic_joint.joint_index).name;
     const auto& mimicked_joint_name = joints.at(mimic_joint.mimicked_joint_index).name;
-    if (joint_state_interfaces_.find(mimic_joint_name + "/" + hardware_interface::HW_IF_POSITION) !=
-        joint_state_interfaces_.end())
+    if (has_state(mimic_joint_name + "/" + hardware_interface::HW_IF_POSITION))
     {
       set_state(mimic_joint_name + "/" + hardware_interface::HW_IF_POSITION,
                 mimic_joint.offset +
                     mimic_joint.multiplier * get_state(mimicked_joint_name + "/" + hardware_interface::HW_IF_POSITION));
     }
-    if (joint_state_interfaces_.find(mimic_joint_name + "/" + hardware_interface::HW_IF_VELOCITY) !=
-        joint_state_interfaces_.end())
+    if (has_state(mimic_joint_name + "/" + hardware_interface::HW_IF_VELOCITY))
     {
       set_state(mimic_joint_name + "/" + hardware_interface::HW_IF_VELOCITY,
                 mimic_joint.multiplier * get_state(mimicked_joint_name + "/" + hardware_interface::HW_IF_VELOCITY));
     }
-    if (joint_state_interfaces_.find(mimic_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION) !=
-        joint_state_interfaces_.end())
+    if (has_state(mimic_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION))
     {
       set_state(mimic_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION,
                 mimic_joint.multiplier * get_state(mimicked_joint_name + "/" + hardware_interface::HW_IF_ACCELERATION));
