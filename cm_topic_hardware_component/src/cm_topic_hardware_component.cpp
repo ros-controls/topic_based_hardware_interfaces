@@ -62,10 +62,7 @@ hardware_interface::return_type CMTopicSystem::read(const rclcpp::Time& /*time*/
       if (names[i].rfind(prefix, 0) == 0)
       {  // starts with prefix
         const auto& name = names[i].substr(prefix.length());
-        if (joint_state_interfaces_.find(name) != joint_state_interfaces_.end() ||
-            sensor_state_interfaces_.find(name) != sensor_state_interfaces_.end() ||
-            gpio_state_interfaces_.find(name) != gpio_state_interfaces_.end() ||
-            unlisted_state_interfaces_.find(name) != unlisted_state_interfaces_.end())
+        if (has_state(name))
         {
           // TODO(christophfroehlich): does not support other values than double now
           set_state(name, latest_pal_values_.values.at(i));
