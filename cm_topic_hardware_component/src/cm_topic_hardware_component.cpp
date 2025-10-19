@@ -50,8 +50,7 @@ hardware_interface::return_type CMTopicSystem::read(const rclcpp::Time& /*time*/
   }
 
   auto it = pal_statistics_names_per_topic_.find(latest_pal_values_.names_version);
-  auto end_it = pal_statistics_names_per_topic_.end();
-  if (it != end_it)
+  if (it != pal_statistics_names_per_topic_.end())
   {
     const auto& names = it->second;
     const size_t N = std::min(names.size(), latest_pal_values_.values.size());
