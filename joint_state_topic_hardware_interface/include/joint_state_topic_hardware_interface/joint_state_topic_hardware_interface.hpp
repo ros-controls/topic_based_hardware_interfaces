@@ -38,10 +38,6 @@ class JointStateTopicSystem : public hardware_interface::SystemInterface
 public:
   CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams& params) override;
 
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
-
-  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
-
   hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
   hardware_interface::return_type write(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) override;
@@ -52,31 +48,9 @@ private:
   sensor_msgs::msg::JointState latest_joint_state_;
   bool sum_wrapped_joint_states_{ false };
 
-  /// Use standard interfaces for joints because they are relevant for dynamic behavior
-  std::array<std::string, 4> standard_interfaces_ = {
-    { hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_ACCELERATION,
-      hardware_interface::HW_IF_EFFORT }
-  };
-
-  struct MimicJoint
-  {
-    std::size_t joint_index;
-    std::size_t mimicked_joint_index;
-    double multiplier = 1.0;
-  };
-  std::vector<MimicJoint> mimic_joints_;
-
-  /// The size of this vector is (standard_interfaces_.size() x nr_joints)
-  std::vector<std::vector<double>> joint_command_values_;
-  std::vector<std::vector<double>> joint_state_values_;
-
   // If the difference between the current joint state and joint command is less than this value,
   // the joint command will not be published.
   double trigger_joint_command_threshold_ = 1e-5;
-
-  template <typename HandleType>
-  bool getInterface(const std::string& name, const std::string& interface_name, const size_t vector_index,
-                    std::vector<std::vector<double>>& values, std::vector<HandleType>& interfaces);
 };
 
 }  // namespace joint_state_topic_hardware_interface
