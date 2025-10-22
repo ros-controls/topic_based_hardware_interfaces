@@ -81,12 +81,19 @@ if(BUILD_TESTING)
     rclcpp::rclcpp
     rclcpp_action::rclcpp_action
   )
+  add_executable(test_gripper test/gripper/test_gripper.cpp)
+  target_link_libraries(test_gripper PUBLIC
+    ${std_msgs_TARGETS}
+    rclcpp::rclcpp
+  )
   function(add_ros_isolated_launch_test path)
     set(RUNNER "${ament_cmake_ros_DIR}/run_test_isolated.py")
     add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
   endfunction()
   add_ros_isolated_launch_test(
     test/rrr/position.test.py)
+  add_ros_isolated_launch_test(
+    test/gripper/position.test.py)
 endif()
 
 pluginlib_export_plugin_description_file(hardware_interface joint_state_topic_hardware_interface_plugin_description.xml)
