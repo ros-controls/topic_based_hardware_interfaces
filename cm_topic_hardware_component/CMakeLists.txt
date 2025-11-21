@@ -11,7 +11,6 @@ endif()
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
-  angles
   rclcpp
   hardware_interface
   pal_statistics_msgs
@@ -32,7 +31,6 @@ add_library(
   src/cm_topic_hardware_component.cpp
 )
 target_link_libraries(${PROJECT_NAME} PUBLIC
-                      angles::angles
                       rclcpp::rclcpp
                       hardware_interface::hardware_interface
                       ${pal_statistics_msgs_TARGETS})

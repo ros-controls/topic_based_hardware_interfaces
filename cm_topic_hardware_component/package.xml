@@ -20,9 +20,9 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <build_depend>ros2_control_cmake</build_depend>
 
-  <depend>rclcpp</depend>
   <depend>hardware_interface</depend>
   <depend>pal_statistics_msgs</depend>
+  <depend>rclcpp</depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>hardware_interface</test_depend>
