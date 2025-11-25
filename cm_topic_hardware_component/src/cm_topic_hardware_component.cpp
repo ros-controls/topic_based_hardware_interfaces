@@ -63,8 +63,10 @@ hardware_interface::return_type CMTopicSystem::read(const rclcpp::Time& /*time*/
         const auto& name = names[i].substr(prefix.length());
         if (has_state(name))
         {
-          // TODO(christophfroehlich): does not support other values than double now
-          set_state(name, latest_pal_values_.values.at(i));
+          const auto handle = get_state_interface_handle(name);
+          // in case of non-double interface datatypes, try to cast from double
+          const auto v = handle->get_data_type().cast_from_double(latest_pal_values_.values.at(i));
+          std::visit([&](auto&& concrete) { set_state(handle, concrete); }, v);
         }
       }
     }
