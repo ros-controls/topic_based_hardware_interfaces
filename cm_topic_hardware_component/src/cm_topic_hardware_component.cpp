@@ -14,9 +14,9 @@
 
 /* Author: Christoph Froehlich */
 
-#include <string>
+#include "cm_topic_hardware_component/cm_topic_hardware_component.hpp"
 
-#include <cm_topic_hardware_component/cm_topic_hardware_component.hpp>
+#include <string>
 
 namespace cm_topic_hardware_component
 {

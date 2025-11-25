@@ -21,12 +21,11 @@
 #include <string>
 
 // ROS
-#include <hardware_interface/system_interface.hpp>
-#include <hardware_interface/types/hardware_component_interface_params.hpp>
-#include <rclcpp/subscription.hpp>
-
-#include <pal_statistics_msgs/msg/statistics_names.hpp>
-#include <pal_statistics_msgs/msg/statistics_values.hpp>
+#include "hardware_interface/system_interface.hpp"
+#include "hardware_interface/types/hardware_component_interface_params.hpp"
+#include "pal_statistics_msgs/msg/statistics_names.hpp"
+#include "pal_statistics_msgs/msg/statistics_values.hpp"
+#include "rclcpp/subscription.hpp"
 
 namespace cm_topic_hardware_component
 {
