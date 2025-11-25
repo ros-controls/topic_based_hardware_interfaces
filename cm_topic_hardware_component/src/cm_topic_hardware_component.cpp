@@ -27,7 +27,7 @@ CallbackReturn CMTopicSystem::on_init(const hardware_interface::HardwareComponen
   {
     return CallbackReturn::ERROR;
   }
-  // TODO(christophfroehlich): should we use RT box here?
+
   pal_names_subscriber_ = get_node()->create_subscription<pal_statistics_msgs::msg::StatisticsNames>(
       "~/names", rclcpp::SensorDataQoS(), [this](const pal_statistics_msgs::msg::StatisticsNames::SharedPtr pal_names) {
         pal_statistics_names_per_topic_[pal_names->names_version] = std::move(pal_names->names);
