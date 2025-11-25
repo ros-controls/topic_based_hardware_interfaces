@@ -65,8 +65,19 @@ hardware_interface::return_type CMTopicSystem::read(const rclcpp::Time& /*time*/
         {
           const auto handle = get_state_interface_handle(name);
           // in case of non-double interface datatypes, try to cast from double
-          const auto v = handle->get_data_type().cast_from_double(latest_pal_values_.values.at(i));
-          std::visit([&](auto&& concrete) { set_state(handle, concrete); }, v);
+          const auto type = handle->get_data_type();
+          switch (type)
+          {
+            case hardware_interface::HandleDataType::DOUBLE:
+              set_state(handle, latest_pal_values_.values.at(i));
+              break;
+            case hardware_interface::HandleDataType::BOOL:
+              set_state(handle, static_cast<bool>(latest_pal_values_.values.at(i)));
+              break;
+            default:
+              // silently ignore unsupported datatypes
+              break;
+          }
         }
       }
     }
