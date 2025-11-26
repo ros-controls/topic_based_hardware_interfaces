@@ -5,7 +5,7 @@
     base_class_type="hardware_interface::SystemInterface"
   >
     <description>
-      ros2_control hardware interface for CM topic based control.
+      ros2_control hardware component using pal_statistics messages from controller_manager introspection.
     </description>
   </class>
 </library>

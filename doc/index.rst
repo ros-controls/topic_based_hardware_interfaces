@@ -2,14 +2,13 @@
 
 topic_based_hardware_interfaces
 ###############################
-The Joint State Topic Based System implements a ros2_control ``hardware_interface::SystemInterface`` supporting command and state interfaces through the ROS topic communication layer.
 
 .. include:: ../joint_state_topic_hardware_interface/README.md
    :parser: myst_parser.sphinx_
 
 cm_topic_hardware_component
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The CM Topic System implements a ros2_control ``hardware_interface::SystemInterface`` subscribing to
+The controller_manager Topic System implements a ros2_control ``hardware_interface::SystemInterface`` subscribing to
 topics of type ``pal_statistics_msgs::msg::StatisticsNames`` and ``pal_statistics_msgs::msg::StatisticsValues``,
 and sets its state interface to the received values (if present).
 

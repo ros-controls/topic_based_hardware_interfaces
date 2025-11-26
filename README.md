@@ -12,6 +12,7 @@ If you are new to the project, please read the [contributing guide](https://cont
 ## Content
 
 - [JointState Topic Hardware Interface](joint_state_topic_hardware_interface/README.md)
+- [Controller Manager Topic Hardware Interface](doc/index.rst#cm_topic_hardware_component)
 
 ## Build status
 

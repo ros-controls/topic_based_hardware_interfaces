@@ -2,11 +2,12 @@
 <package format="3">
   <name>cm_topic_hardware_component</name>
   <version>0.2.0</version>
-  <description>ros2_control hardware interface using pal_statistics messages</description>
+  <description>ros2_control hardware component using pal_statistics messages from controller_manager introspection</description>
 
   <maintainer email="marq.razz@gmail.com">Marq Rasmussen</maintainer>
   <maintainer email="jafar.uruc@gmail.com">Jafar Uruc</maintainer>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
+  <maintainer email="christoph.froehlich@ait.ac.at">Christoph Froehlich</maintainer>
 
   <author email="christoph.froehlich@ait.ac.at">Christoph Froehlich</author>
 
