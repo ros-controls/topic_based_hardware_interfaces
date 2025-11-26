@@ -75,7 +75,9 @@ hardware_interface::return_type CMTopicSystem::read(const rclcpp::Time& /*time*/
               set_state(handle, static_cast<bool>(latest_pal_values_.values.at(i)));
               break;
             default:
-              // silently ignore unsupported datatypes
+              // ignore unsupported datatypes
+              RCLCPP_DEBUG(get_node()->get_logger(), "Ignoring unsupported state interface datatype for interface '%s'",
+                           name.c_str());
               break;
           }
         }
