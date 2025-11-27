@@ -8,8 +8,8 @@ topic_based_hardware_interfaces
 
 cm_topic_hardware_component
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The controller_manager Topic System implements a ros2_control ``hardware_interface::SystemInterface`` subscribing to
-topics of type ``pal_statistics_msgs::msg::StatisticsNames`` and ``pal_statistics_msgs::msg::StatisticsValues``,
+The controller_manager topic System implements a ros2_control ``hardware_interface::SystemInterface`` that subscribes
+to topics of type ``pal_statistics_msgs::msg::StatisticsNames`` and ``pal_statistics_msgs::msg::StatisticsValues``,
 and sets its state interface to the received values (if present).
 
 Per default, the ros2_control controller manager publishes these topics to ``/controller_manager/introspection_data/names``
