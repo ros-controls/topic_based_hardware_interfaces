@@ -69,10 +69,10 @@ hardware_interface::return_type CMTopicSystem::read(const rclcpp::Time& /*time*/
           switch (type)
           {
             case hardware_interface::HandleDataType::DOUBLE:
-              set_state(handle, latest_pal_values_.values.at(i));
+              set_state(handle, latest_pal_values_.values.at(i), true);
               break;
             case hardware_interface::HandleDataType::BOOL:
-              set_state(handle, static_cast<bool>(latest_pal_values_.values.at(i)));
+              set_state(handle, static_cast<bool>(latest_pal_values_.values.at(i)), true);
               break;
             default:
               // ignore unsupported datatypes
