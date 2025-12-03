@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>cm_topic_hardware_component</name>
-  <version>0.2.1</version>
+  <version>1.0.0</version>
   <description>ros2_control hardware component using pal_statistics messages from controller_manager introspection</description>
 
   <maintainer email="marq.razz@gmail.com">Marq Rasmussen</maintainer>
