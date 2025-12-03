@@ -14,9 +14,9 @@
 
 /* Author: Christoph Froehlich */
 
-#include <string>
+#include "cm_topic_hardware_component/cm_topic_hardware_component.hpp"
 
-#include <cm_topic_hardware_component/cm_topic_hardware_component.hpp>
+#include <string>
 
 namespace cm_topic_hardware_component
 {
@@ -27,7 +27,7 @@ CallbackReturn CMTopicSystem::on_init(const hardware_interface::HardwareComponen
   {
     return CallbackReturn::ERROR;
   }
-  // TODO(christophfroehlich): should we use RT box here?
+
   pal_names_subscriber_ = get_node()->create_subscription<pal_statistics_msgs::msg::StatisticsNames>(
       "~/names", rclcpp::SensorDataQoS(), [this](const pal_statistics_msgs::msg::StatisticsNames::SharedPtr pal_names) {
         pal_statistics_names_per_topic_[pal_names->names_version] = std::move(pal_names->names);
@@ -63,8 +63,23 @@ hardware_interface::return_type CMTopicSystem::read(const rclcpp::Time& /*time*/
         const auto& name = names[i].substr(prefix.length());
         if (has_state(name))
         {
-          // TODO(christophfroehlich): does not support other values than double now
-          set_state(name, latest_pal_values_.values.at(i));
+          const auto handle = get_state_interface_handle(name);
+          // in case of non-double interface datatypes, try to cast from double
+          const auto type = handle->get_data_type();
+          switch (type)
+          {
+            case hardware_interface::HandleDataType::DOUBLE:
+              set_state(handle, latest_pal_values_.values.at(i), true);
+              break;
+            case hardware_interface::HandleDataType::BOOL:
+              set_state(handle, static_cast<bool>(latest_pal_values_.values.at(i)), true);
+              break;
+            default:
+              // ignore unsupported datatypes
+              RCLCPP_DEBUG(get_node()->get_logger(), "Ignoring unsupported state interface datatype for interface '%s'",
+                           name.c_str());
+              break;
+          }
         }
       }
     }

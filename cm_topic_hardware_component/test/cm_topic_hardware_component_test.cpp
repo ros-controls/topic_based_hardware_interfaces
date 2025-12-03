@@ -242,6 +242,7 @@ TEST_F(TestTopicBasedSystem, topic_based_system_2dof)
       <state_interface name="analog_output1"/>
       <state_interface name="analog_input1"/>
       <state_interface name="analog_input2"/>
+      <state_interface name="digital_input1" data_type="bool"/>
     </gpio>
     <sensor name="force_sensor">
       <state_interface name="force.x">
@@ -267,7 +268,7 @@ TEST_F(TestTopicBasedSystem, topic_based_system_2dof)
 
   // Check interfaces
   EXPECT_EQ(1u, rm_->system_components_size());
-  ASSERT_EQ(12u, rm_->state_interface_keys().size());
+  ASSERT_EQ(13u, rm_->state_interface_keys().size());
   EXPECT_TRUE(rm_->state_interface_exists("joint1/position"));
   EXPECT_TRUE(rm_->state_interface_exists("joint1/velocity"));
   EXPECT_TRUE(rm_->state_interface_exists("joint2/position"));
@@ -278,6 +279,7 @@ TEST_F(TestTopicBasedSystem, topic_based_system_2dof)
   EXPECT_TRUE(rm_->state_interface_exists("flange_analog_IOs/analog_output1"));
   EXPECT_TRUE(rm_->state_interface_exists("flange_analog_IOs/analog_input1"));
   EXPECT_TRUE(rm_->state_interface_exists("flange_analog_IOs/analog_input2"));
+  EXPECT_TRUE(rm_->state_interface_exists("flange_analog_IOs/digital_input1"));
   EXPECT_TRUE(rm_->state_interface_exists("force_sensor/force.x"));
   EXPECT_TRUE(rm_->state_interface_exists("force_sensor/force.y"));
   EXPECT_TRUE(rm_->state_interface_exists("force_sensor/force.z"));
@@ -298,6 +300,7 @@ TEST_F(TestTopicBasedSystem, topic_based_system_2dof)
   hardware_interface::LoanedStateInterface g_ao_s = rm_->claim_state_interface("flange_analog_IOs/analog_output1");
   hardware_interface::LoanedStateInterface g_ai1_s = rm_->claim_state_interface("flange_analog_IOs/analog_input1");
   hardware_interface::LoanedStateInterface g_ai2_s = rm_->claim_state_interface("flange_analog_IOs/analog_input2");
+  hardware_interface::LoanedStateInterface g_di1_s = rm_->claim_state_interface("flange_analog_IOs/digital_input1");
   hardware_interface::LoanedStateInterface f_x_s = rm_->claim_state_interface("force_sensor/force.x");
   hardware_interface::LoanedStateInterface f_y_s = rm_->claim_state_interface("force_sensor/force.y");
   hardware_interface::LoanedStateInterface f_z_s = rm_->claim_state_interface("force_sensor/force.z");
@@ -312,6 +315,7 @@ TEST_F(TestTopicBasedSystem, topic_based_system_2dof)
   EXPECT_TRUE(std::isnan(g_ao_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(g_ai1_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(g_ai2_s.get_optional().value()));
+  EXPECT_EQ(g_di1_s.get_optional<bool>().value(), false);
   EXPECT_EQ(f_x_s.get_optional().value(), 0.0);
   EXPECT_EQ(f_y_s.get_optional().value(), 0.0);
   EXPECT_EQ(f_z_s.get_optional().value(), 0.0);
@@ -342,6 +346,7 @@ TEST_F(TestTopicBasedSystem, topic_based_system_2dof)
   EXPECT_TRUE(std::isnan(j1_v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(j2_v_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(j3_v_s.get_optional().value()));
+  EXPECT_EQ(g_di1_s.get_optional<bool>().value(), false);
 
   EXPECT_EQ(j1_p_c.get_optional().value(), 0.11);
   EXPECT_EQ(j2_p_c.get_optional().value(), 0.12);
@@ -375,6 +380,7 @@ TEST_F(TestTopicBasedSystem, topic_based_system_2dof)
   EXPECT_TRUE(std::isnan(g_ao_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(g_ai1_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(g_ai2_s.get_optional().value()));
+  EXPECT_EQ(g_di1_s.get_optional<bool>().value(), false);
   EXPECT_EQ(f_x_s.get_optional().value(), 0.0);
   EXPECT_EQ(f_y_s.get_optional().value(), 0.0);
   EXPECT_EQ(f_z_s.get_optional().value(), 0.0);
@@ -411,6 +417,7 @@ TEST_F(TestTopicBasedSystem, topic_based_system_2dof)
   // other states remain unchanged
   EXPECT_TRUE(std::isnan(g_ai1_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(g_ai2_s.get_optional().value()));
+  EXPECT_EQ(g_di1_s.get_optional<bool>().value(), false);
   EXPECT_EQ(f_y_s.get_optional().value(), 0.0);
   EXPECT_EQ(f_z_s.get_optional().value(), 0.0);
 
@@ -439,6 +446,20 @@ TEST_F(TestTopicBasedSystem, topic_based_system_2dof)
   EXPECT_EQ(g_ao_s.get_optional().value(), 1.4);
   EXPECT_TRUE(std::isnan(g_ai1_s.get_optional().value()));
   EXPECT_TRUE(std::isnan(g_ai2_s.get_optional().value()));
+  EXPECT_EQ(g_di1_s.get_optional<bool>().value(), false);
   EXPECT_EQ(f_y_s.get_optional().value(), 0.0);
   EXPECT_EQ(f_z_s.get_optional().value(), 0.0);
+
+  // publish boolean value as double
+  publish({ "state_interface.flange_analog_IOs/digital_input1" }, { 1.0 }, 4u);
+
+  wait_for_msg(std::chrono::milliseconds{ 100 });
+
+  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+
+  // was it processed and casted to bool correctly?
+  EXPECT_EQ(g_di1_s.get_optional<bool>().value(), true);
 }
