@@ -28,7 +28,7 @@ repos:
       - id: sort-simple-yaml
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.10
+    rev: v0.14.14
     hooks:
       - id: ruff
         args: ['--output-format=full', '--fix', '--config', 'pyproject.toml']
@@ -47,7 +47,7 @@ repos:
         # -i arg is included by default by the hook
         args: ['-fallback-style=none']
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.37.1
+    rev: v1.38.0
     hooks:
       - id: yamllint
         args: ["--no-warnings", "--config-data", "{extends: default, rules: {line-length: disable}}"]
