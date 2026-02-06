@@ -9,7 +9,7 @@
     </description>
   </class>
   <class
-    name="topic_based_ros2_control/TopicBasedSyste"
+    name="topic_based_ros2_control/TopicBasedSystem"
     type="joint_state_topic_hardware_interface::JointStateTopicSystem"
     base_class_type="hardware_interface::SystemInterface"
   >
