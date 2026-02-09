@@ -8,4 +8,15 @@
       ros2_control hardware interface for JointState topic based control.
     </description>
   </class>
+  <!-- For Backward Compatibility Reasons. TODO: Remove in future releases -->
+  <class
+    name="topic_based_ros2_control/TopicBasedSystem"
+    type="joint_state_topic_hardware_interface::JointStateTopicSystem"
+    base_class_type="hardware_interface::SystemInterface"
+  >
+    <description>
+      ros2_control hardware interface for JointState topic based control.
+      Deprecated: change to 'joint_state_topic_hardware_interface/JointStateTopicSystem'
+    </description>
+  </class>
 </library>
