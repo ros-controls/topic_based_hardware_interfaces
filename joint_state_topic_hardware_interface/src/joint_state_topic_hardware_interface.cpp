@@ -83,6 +83,16 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
     sum_wrapped_joint_states_ = true;
   }
 
+  // TODO(anyone): Remove in a future release after users have migrated to the new plugin name
+  if (get_hardware_info().hardware_plugin_name.find("topic_based_ros2_control") != std::string::npos)
+  {
+    RCLCPP_WARN(get_node()->get_logger(),
+                "Plugin name '%s' is deprecated, upgrade to "
+                "'joint_state_topic_hardware_interface/JointStateTopicSystem' from package"
+                " 'joint_state_topic_hardware_interface' instead.",
+                get_hardware_info().hardware_plugin_name.c_str());
+  }
+
   return CallbackReturn::SUCCESS;
 }
 
