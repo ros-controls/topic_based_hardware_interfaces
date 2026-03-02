@@ -47,14 +47,10 @@ class TestTopicBasedSystem : public ::testing::Test
 {
 protected:
   static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
+  { rclcpp::init(0, nullptr); }
 
   static void TearDownTestCase()
-  {
-    rclcpp::shutdown();
-  }
+  { rclcpp::shutdown(); }
 
   void SetUp() override
   {
@@ -66,9 +62,7 @@ protected:
   }
 
   void TearDown() override
-  {
-    node_.reset();
-  }
+  { node_.reset(); }
 
   rclcpp::Node::SharedPtr node_;
   rclcpp::Executor::SharedPtr executor_;
