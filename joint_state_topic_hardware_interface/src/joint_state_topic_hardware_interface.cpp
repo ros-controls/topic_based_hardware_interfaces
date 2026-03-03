@@ -201,10 +201,11 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
   // The JointState message definition requires that all arrays in the message
   // should have the same size, or be empty.
   // https://docs.ros.org/en/api/sensor_msgs/html/msg/JointState.html
+  typedef sensor_msgs::msg::JointState::_position_type::value_type value_type;
   joint_state.name.resize(joints.size());
-  joint_state.position.resize(joints.size(), 0.0);
-  joint_state.velocity.resize(joints.size(), 0.0);
-  joint_state.effort.resize(joints.size(), 0.0);
+  joint_state.position.resize(joints.size(), std::numeric_limits<value_type>::quiet_NaN());
+  joint_state.velocity.resize(joints.size(), std::numeric_limits<value_type>::quiet_NaN());
+  joint_state.effort.resize(joints.size(), std::numeric_limits<value_type>::quiet_NaN());
 
   for (std::size_t i = 0; i < joints.size(); ++i)
   {
