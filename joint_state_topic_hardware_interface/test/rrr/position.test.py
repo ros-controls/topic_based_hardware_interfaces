@@ -171,4 +171,16 @@ class TestFixture(unittest.TestCase):
 class TestProcessPostShutdown(unittest.TestCase):
     # Checks if the test has been completed with acceptable exit codes (successful codes)
     def test_pass(self, proc_info):
-        launch_testing.asserts.assertExitCodes(proc_info)
+        allowable_exit_codes = [0]
+        for process in proc_info.processes():
+            process_name = process.process_details["name"]
+            process_allowable_exit_codes = list(allowable_exit_codes)
+            if "relay" in process_name:
+                # topic_tools relay sometimes exits with -6 when the test finishes
+                # https://github.com/ros-controls/topic_based_hardware_interfaces/issues/76
+                process_allowable_exit_codes.extend([-6])
+            launch_testing.asserts.assertExitCodes(
+                proc_info,
+                process=process,
+                allowable_exit_codes=process_allowable_exit_codes,
+            )
