@@ -197,24 +197,34 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
   }
 
   sensor_msgs::msg::JointState joint_state;
+
+  // The JointState message definition requires that all arrays in the message
+  // should have the same size, or be empty.
+  // https://docs.ros.org/en/api/sensor_msgs/html/msg/JointState.html
+  typedef sensor_msgs::msg::JointState::_position_type::value_type value_type;
+  joint_state.name.resize(joints.size());
+  joint_state.position.resize(joints.size(), std::numeric_limits<value_type>::quiet_NaN());
+  joint_state.velocity.resize(joints.size(), std::numeric_limits<value_type>::quiet_NaN());
+  joint_state.effort.resize(joints.size(), std::numeric_limits<value_type>::quiet_NaN());
+
   for (std::size_t i = 0; i < joints.size(); ++i)
   {
-    joint_state.name.push_back(joints[i].name);
     joint_state.header.stamp = get_node()->now();
+    joint_state.name[i] = joints[i].name;
     // only send commands to the interfaces that are defined for this joint
     for (const auto& interface : joints[i].command_interfaces)
     {
       if (interface.name == hardware_interface::HW_IF_POSITION)
       {
-        joint_state.position.push_back(get_command(joints[i].name + "/" + interface.name));
+        joint_state.position[i] = get_command(joints[i].name + "/" + interface.name);
       }
       else if (interface.name == hardware_interface::HW_IF_VELOCITY)
       {
-        joint_state.velocity.push_back(get_command(joints[i].name + "/" + interface.name));
+        joint_state.velocity[i] = get_command(joints[i].name + "/" + interface.name);
       }
       else if (interface.name == hardware_interface::HW_IF_EFFORT)
       {
-        joint_state.effort.push_back(get_command(joints[i].name + "/" + interface.name));
+        joint_state.effort[i] = get_command(joints[i].name + "/" + interface.name);
       }
       else
       {
