@@ -182,7 +182,10 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
   {
     for (const auto& interface : joints[i].command_interfaces)
     {
-      if (interface.name != hardware_interface::HW_IF_POSITION)
+      const bool supported_command_interface = interface.name == hardware_interface::HW_IF_POSITION ||
+                                               interface.name == hardware_interface::HW_IF_VELOCITY ||
+                                               interface.name == hardware_interface::HW_IF_EFFORT;
+      if (!supported_command_interface)
       {
         continue;
       }
