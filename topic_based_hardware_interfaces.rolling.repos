@@ -14,7 +14,7 @@ repositories:
   ros2_control_cmake:
     type: git
     url: https://github.com/ros-controls/ros2_control_cmake.git
-    version: master
+    version: c++20
   ros2_controllers:
     type: git
     url: https://github.com/ros-controls/ros2_controllers.git
