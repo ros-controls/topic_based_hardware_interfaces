@@ -17,6 +17,7 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'topic_based_hardware_interfaces.rolling.repos'
+      - 'topic_based_hardware_interfaces.lyrical.repos'
       - 'topic_based_hardware_interfaces.kilted.repos'
       - 'topic_based_hardware_interfaces.jazzy.repos'
       - '**.xml'
@@ -36,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [jazzy, kilted, rolling]
+        ROS_DISTRO: [jazzy, kilted, lyrical, rolling]
         ROS_REPO: [main, testing]
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}
