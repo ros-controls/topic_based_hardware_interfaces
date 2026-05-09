@@ -36,7 +36,10 @@ jobs:
       matrix:
         include:
         - ROS_DISTRO: rolling
-          CONTAINER: ubuntu:24.04
+          CONTAINER: ubuntu:26.04
+          OS_NAME: ubuntu-latest
+        - ROS_DISTRO: lyrical
+          CONTAINER: ubuntu:26.04
           OS_NAME: ubuntu-latest
         - ROS_DISTRO: kilted
           CONTAINER: ubuntu:24.04
