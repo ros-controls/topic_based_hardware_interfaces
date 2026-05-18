@@ -50,6 +50,7 @@ private:
 
   // If the difference between the current joint state and joint command is less than this value,
   // the joint command will not be published.
+  bool trigger_joint_command_threshold_enabled_{ false };
   double trigger_joint_command_threshold_ = 1e-5;
 };
 
