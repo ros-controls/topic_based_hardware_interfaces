@@ -2,6 +2,14 @@
 Changelog for package joint_state_topic_hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.0 (2026-05-13)
+------------------
+* Publish JointState commands for velocity-only and effort-only interfaces (`#118 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/118>`_)
+* Bump C++ version to C++20 (`#119 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/119>`_)
+* Bump version of pre-commit hooks (`#98 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/98>`_)
+* Add alias for old `topic_based_ros2_control` plugin name (`#87 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/87>`_)
+* Contributors: Christoph Fröhlich, Ted Vanderfeen, github-actions[bot]
+
 1.0.0 (2025-12-03)
 ------------------
 * Rewrite resource storage and add mimic test (`#44 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/44>`_)
