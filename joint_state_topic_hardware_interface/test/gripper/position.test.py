@@ -19,6 +19,7 @@ from pathlib import Path
 
 import launch_testing
 import launch_testing.markers
+import math
 import numpy as np
 import pytest
 import rclpy
@@ -106,11 +107,30 @@ class TestFixture(unittest.TestCase):
     def test_main(self, launch_service, proc_info, proc_output):
         # By default the joint_states should have the initial_value from rrr.urdf.xacro
         self.node.get_logger().info("Checking initial joint states...")
-        current_joint_state = self.get_current_joint_state()
+        current_joint_state, current_joint_state_msg = self.get_current_joint_state()
         urdf_initial_values = [0.15, 0.15]
         assert current_joint_state == urdf_initial_values, (
             f"{current_joint_state=} != {urdf_initial_values=}"
         )
+
+        # Check array sizes of joint_state message
+        assert len(current_joint_state_msg.position) == len(current_joint_state_msg.name), (
+            f"{len(current_joint_state_msg.position)=} != {len(current_joint_state_msg.name)=}"
+        )
+        assert len(current_joint_state_msg.velocity) == len(current_joint_state_msg.name), (
+            f"{len(current_joint_state_msg.velocity)=} != {len(current_joint_state_msg.name)=}"
+        )
+        assert len(current_joint_state_msg.effort) == len(current_joint_state_msg.effort), (
+            f"{len(current_joint_state_msg.effort)=} != {len(current_joint_state_msg.name)=}"
+        )
+
+        # Check velocity and effort arrays contain NaN
+        for cmd in current_joint_state_msg.velocity:
+            assert type(cmd) == float, (f"{type(cmd)=} != {float=}")
+            assert math.isnan(cmd), (f"{math.isnan(cmd)=}")
+        for cmd in current_joint_state_msg.effort:
+            assert type(cmd) == float, (f"{type(cmd)=} != {float=}")
+            assert math.isnan(cmd), (f"{math.isnan(cmd)=}")
 
         # Test setting the robot joint states via controller
         # test_gripper was not installed, call it directly from build space
@@ -132,7 +152,7 @@ class TestFixture(unittest.TestCase):
             )
 
         self.node.get_logger().info("Checking final joint states...")
-        current_joint_state = self.get_current_joint_state()
+        current_joint_state, _ = self.get_current_joint_state()
         final_values = [0.09, 0.09]
         assert np.allclose(
             current_joint_state,
@@ -142,9 +162,11 @@ class TestFixture(unittest.TestCase):
 
     def joint_states_callback(self, msg: JointState):
         self.current_joint_state = self.filter_joint_state_msg(msg)
+        self.current_joint_state_msg = msg
 
     def get_current_joint_state(self) -> OrderedDict[str, float]:
         """Get the current joint state reported by ros2_control on joint_states topic."""
+        self.current_joint_state_msg = None
         self.current_joint_state = []
         while len(self.current_joint_state) == 0:
             self.node.get_logger().warning(
@@ -153,7 +175,7 @@ class TestFixture(unittest.TestCase):
                 skip_first=True,
             )
             rclpy.spin_once(self.node, timeout_sec=1.0)
-        return self.current_joint_state
+        return self.current_joint_state, self.current_joint_state_msg
 
     def filter_joint_state_msg(self, msg: JointState):
         joint_states = []
