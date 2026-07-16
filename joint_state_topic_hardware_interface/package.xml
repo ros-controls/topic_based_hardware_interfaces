@@ -27,10 +27,10 @@
   <depend>rclcpp</depend>
   <depend>hardware_interface</depend>
   <depend>sensor_msgs</depend>
+  <depend>control_msgs</depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ament_cmake_ros</test_depend>
-  <test_depend>control_msgs</test_depend>
   <test_depend>controller_manager</test_depend>
   <test_depend>forward_command_controller</test_depend>
   <test_depend>joint_state_broadcaster</test_depend>

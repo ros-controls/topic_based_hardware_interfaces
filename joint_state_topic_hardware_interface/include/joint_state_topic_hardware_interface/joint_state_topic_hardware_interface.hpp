@@ -27,6 +27,7 @@
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/subscription.hpp>
 
+#include <control_msgs/msg/joint_command.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 
 namespace joint_state_topic_hardware_interface
@@ -44,9 +45,11 @@ public:
 
 private:
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr topic_based_joint_states_subscriber_;
-  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr topic_based_joint_commands_publisher_;
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr topic_based_joint_state_publisher_;
+  rclcpp::Publisher<control_msgs::msg::JointCommand>::SharedPtr topic_based_joint_command_publisher_;
   sensor_msgs::msg::JointState latest_joint_state_;
   bool sum_wrapped_joint_states_{ false };
+  bool use_joint_command_msg_{ false };
 
   // If the difference between the current joint state and joint command is less than this value,
   // the joint command will not be published.

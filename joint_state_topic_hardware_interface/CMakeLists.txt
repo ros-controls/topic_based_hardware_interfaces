@@ -12,6 +12,7 @@ option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   angles
+  control_msgs
   rclcpp
   hardware_interface
   sensor_msgs
@@ -35,6 +36,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
                       angles::angles
                       rclcpp::rclcpp
                       hardware_interface::hardware_interface
+                      ${control_msgs_TARGETS}
                       ${sensor_msgs_TARGETS})
 target_include_directories(${PROJECT_NAME}
   PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -66,6 +68,7 @@ if(BUILD_TESTING)
                         angles::angles
                         rclcpp::rclcpp
                         hardware_interface::hardware_interface
+                        ${control_msgs_TARGETS}
                         ${sensor_msgs_TARGETS}
                         ros2_control_test_assets::ros2_control_test_assets)
 
@@ -73,7 +76,6 @@ if(BUILD_TESTING)
   find_package(ament_cmake_ros REQUIRED)
   find_package(launch_testing_ament_cmake REQUIRED)
   find_package(rclcpp_action REQUIRED)
-  find_package(control_msgs REQUIRED)
   add_executable(jtc_client_position test/rrr/jtc_client_position.cpp)
   target_link_libraries(jtc_client_position PUBLIC
     ${control_msgs_TARGETS}
