@@ -12,6 +12,7 @@ The `joint_state_topic_hardware_interface` has a few `ros2_control` urdf tags to
 * joint_states_topic: (default: "/robot_joint_states"). Example: `<param name="joint_states_topic">/my_topic_joint_states</param>`.
 * trigger_joint_command_threshold: (default: 1e-5). Used to avoid spamming the joint command topic when the difference between the current joint state and the joint command is smaller than this value, set to -1 to always send the joint command. Example: `<param name="trigger_joint_command_threshold">0.001</param>`.
 * sum_wrapped_joint_states: (default: "false"). Used to track the total rotation for joint states the values reported on the `joint_commands_topic` wrap from 2*pi to -2*pi when rotating in the positive direction. (Isaac Sim only reports joint states from 2*pi to -2*pi) Example: `<param name="sum_wrapped_joint_states">true</param>`.
+* command_type: (default: "joint_state"). Selects the command message type published on `joint_commands_topic`. Set to `"joint_state"` to publish `sensor_msgs/JointState` (default), or `"joint_command"` to publish `control_msgs/JointCommand` messages grouped by interface type. Example: `<param name="command_type">joint_command</param>`.
 
 ### Per-joint Parameters
 
@@ -73,5 +74,29 @@ If your robot description support mock_components you simply add an if-else stat
                 </state_interface>
                 <state_interface name="velocity"/>
             </joint>
+        </ros2_control>
+```
+
+## Using `control_msgs/JointCommand` messages
+
+To publish commands as `control_msgs/JointCommand` messages instead of `sensor_msgs/JointState`, set the `command_type` parameter to `"joint_command"`. This publishes one `JointCommand` message per interface type (position, velocity, effort) on each `write()` call.
+
+```xml
+        <ros2_control name="name" type="system">
+            <hardware>
+              <plugin>joint_state_topic_hardware_interface/JointStateTopicSystem</plugin>
+              <param name="joint_commands_topic">/topic_based_joint_commands</param>
+              <param name="joint_states_topic">/topic_based_joint_states</param>
+              <param name="command_type">joint_command</param>
+            </hardware>
+            <joint name="joint_1">
+                <command_interface name="position"/>
+                <command_interface name="velocity"/>
+                <state_interface name="position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            ...
         </ros2_control>
 ```

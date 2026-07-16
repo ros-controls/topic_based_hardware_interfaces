@@ -4,6 +4,7 @@ Changelog for package joint_state_topic_hardware_interface
 
 1.1.0 (2026-05-13)
 ------------------
+* Add optional ``command_type`` parameter to publish ``control_msgs/JointCommand`` instead of ``sensor_msgs/JointState`` for joint commands.
 * Publish JointState commands for velocity-only and effort-only interfaces (`#118 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/118>`_)
 * Bump C++ version to C++20 (`#119 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/119>`_)
 * Bump version of pre-commit hooks (`#98 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/98>`_)

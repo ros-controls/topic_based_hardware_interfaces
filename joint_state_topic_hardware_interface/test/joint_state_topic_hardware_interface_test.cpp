@@ -24,6 +24,7 @@
 #else
 #include "hardware_interface/version.h"
 #endif
+#include "control_msgs/msg/joint_command.hpp"
 #include "hardware_interface/resource_manager.hpp"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/node.hpp"
@@ -114,6 +115,17 @@ protected:
       executor_->spin_some();
       std::this_thread::sleep_for(std::chrono::microseconds(10));
     }
+  }
+
+  void wait_for_publisher(const std::string& topic)
+  {
+    int wait_count = 0;
+    while (node_->count_publishers(topic) == 0 && wait_count < 5)
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      ++wait_count;
+    }
+    ASSERT_GT(node_->count_publishers(topic), 0u);
   }
 
   void init_rm(const std::string& urdf)
@@ -827,4 +839,315 @@ TEST_F(TestTopicBasedSystem, topic_based_system_with_mimic_joint_missing_positio
 
   // commands should remain unchanged
   EXPECT_EQ(j1_p_c.get_optional().value(), 0.11);
+}
+
+TEST_F(TestTopicBasedSystem, topic_based_system_2dof_joint_command_position_only)
+{
+  control_msgs::msg::JointCommand::SharedPtr command_msg;
+  auto command_subscriber = node_->create_subscription<control_msgs::msg::JointCommand>(
+      "/topic_based_joint_commands", rclcpp::QoS(1),
+      [&command_msg](const control_msgs::msg::JointCommand::SharedPtr msg) { command_msg = msg; });
+  executor_->add_node(node_);
+
+  const std::string hardware_system_2dof_topic_based =
+      R"(
+  <ros2_control name="JointStateTopicBasedSystem2dof" type="system">
+    <hardware>
+      <plugin>joint_state_topic_hardware_interface/JointStateTopicSystem</plugin>
+      <param name="joint_commands_topic">/topic_based_joint_commands</param>
+      <param name="joint_states_topic">/topic_based_custom_joint_states</param>
+      <param name="command_type">joint_command</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+    </joint>
+  </ros2_control>
+)";
+  auto urdf =
+      ros2_control_test_assets::urdf_head + hardware_system_2dof_topic_based + ros2_control_test_assets::urdf_tail;
+
+  init_rm(urdf);
+
+  activate_components(*rm_, { "JointStateTopicBasedSystem2dof" });
+
+  hardware_interface::LoanedCommandInterface j1_p_c = rm_->claim_command_interface("joint1/position");
+  hardware_interface::LoanedCommandInterface j2_p_c = rm_->claim_command_interface("joint2/position");
+
+  ASSERT_TRUE(j1_p_c.set_value(0.12));
+  ASSERT_TRUE(j2_p_c.set_value(0.14));
+
+  wait_for_publisher("/topic_based_joint_commands");
+
+  hardware_interface::return_type ret;
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+
+  wait_for_msg(std::chrono::milliseconds{ 100 });
+
+  ASSERT_NE(command_msg, nullptr);
+  EXPECT_THAT(command_msg->joint_names, ::testing::ElementsAre("joint1", "joint2"));
+  EXPECT_EQ(command_msg->interface_name, "position");
+  EXPECT_THAT(command_msg->values, ::testing::ElementsAre(0.12, 0.14));
+}
+
+TEST_F(TestTopicBasedSystem, topic_based_system_2dof_joint_command_velocity_only)
+{
+  control_msgs::msg::JointCommand::SharedPtr command_msg;
+  auto command_subscriber = node_->create_subscription<control_msgs::msg::JointCommand>(
+      "/topic_based_joint_commands", rclcpp::QoS(1),
+      [&command_msg](const control_msgs::msg::JointCommand::SharedPtr msg) { command_msg = msg; });
+  executor_->add_node(node_);
+
+  const std::string hardware_system_2dof_topic_based =
+      R"(
+  <ros2_control name="JointStateTopicBasedSystem2dof" type="system">
+    <hardware>
+      <plugin>joint_state_topic_hardware_interface/JointStateTopicSystem</plugin>
+      <param name="joint_commands_topic">/topic_based_joint_commands</param>
+      <param name="joint_states_topic">/topic_based_custom_joint_states</param>
+      <param name="command_type">joint_command</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
+  auto urdf =
+      ros2_control_test_assets::urdf_head + hardware_system_2dof_topic_based + ros2_control_test_assets::urdf_tail;
+
+  init_rm(urdf);
+
+  activate_components(*rm_, { "JointStateTopicBasedSystem2dof" });
+
+  hardware_interface::LoanedCommandInterface j1_v_c = rm_->claim_command_interface("joint1/velocity");
+  hardware_interface::LoanedCommandInterface j2_v_c = rm_->claim_command_interface("joint2/velocity");
+
+  ASSERT_TRUE(j1_v_c.set_value(0.12));
+  ASSERT_TRUE(j2_v_c.set_value(0.14));
+
+  wait_for_publisher("/topic_based_joint_commands");
+
+  hardware_interface::return_type ret;
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+
+  wait_for_msg(std::chrono::milliseconds{ 100 });
+
+  ASSERT_NE(command_msg, nullptr);
+  EXPECT_THAT(command_msg->joint_names, ::testing::ElementsAre("joint1", "joint2"));
+  EXPECT_EQ(command_msg->interface_name, "velocity");
+  EXPECT_THAT(command_msg->values, ::testing::ElementsAre(0.12, 0.14));
+}
+
+TEST_F(TestTopicBasedSystem, topic_based_system_2dof_joint_command_effort_only)
+{
+  control_msgs::msg::JointCommand::SharedPtr command_msg;
+  auto command_subscriber = node_->create_subscription<control_msgs::msg::JointCommand>(
+      "/topic_based_joint_commands", rclcpp::QoS(1),
+      [&command_msg](const control_msgs::msg::JointCommand::SharedPtr msg) { command_msg = msg; });
+  executor_->add_node(node_);
+
+  const std::string hardware_system_2dof_topic_based =
+      R"(
+  <ros2_control name="JointStateTopicBasedSystem2dof" type="system">
+    <hardware>
+      <plugin>joint_state_topic_hardware_interface/JointStateTopicSystem</plugin>
+      <param name="joint_commands_topic">/topic_based_joint_commands</param>
+      <param name="joint_states_topic">/topic_based_custom_joint_states</param>
+      <param name="command_type">joint_command</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="effort"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="effort"/>
+      <state_interface name="effort"/>
+    </joint>
+  </ros2_control>
+)";
+  auto urdf =
+      ros2_control_test_assets::urdf_head + hardware_system_2dof_topic_based + ros2_control_test_assets::urdf_tail;
+
+  init_rm(urdf);
+
+  activate_components(*rm_, { "JointStateTopicBasedSystem2dof" });
+
+  hardware_interface::LoanedCommandInterface j1_e_c = rm_->claim_command_interface("joint1/effort");
+  hardware_interface::LoanedCommandInterface j2_e_c = rm_->claim_command_interface("joint2/effort");
+
+  ASSERT_TRUE(j1_e_c.set_value(0.12));
+  ASSERT_TRUE(j2_e_c.set_value(0.14));
+
+  wait_for_publisher("/topic_based_joint_commands");
+
+  hardware_interface::return_type ret;
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+
+  wait_for_msg(std::chrono::milliseconds{ 100 });
+
+  ASSERT_NE(command_msg, nullptr);
+  EXPECT_THAT(command_msg->joint_names, ::testing::ElementsAre("joint1", "joint2"));
+  EXPECT_EQ(command_msg->interface_name, "effort");
+  EXPECT_THAT(command_msg->values, ::testing::ElementsAre(0.12, 0.14));
+}
+
+TEST_F(TestTopicBasedSystem, topic_based_system_2dof_joint_command_mixed_interfaces)
+{
+  control_msgs::msg::JointCommand::SharedPtr command_msg;
+  auto command_subscriber = node_->create_subscription<control_msgs::msg::JointCommand>(
+      "/topic_based_joint_commands", rclcpp::QoS(1),
+      [&command_msg](const control_msgs::msg::JointCommand::SharedPtr msg) { command_msg = msg; });
+  executor_->add_node(node_);
+
+  const std::string hardware_system_2dof_topic_based =
+      R"(
+  <ros2_control name="JointStateTopicBasedSystem2dof" type="system">
+    <hardware>
+      <plugin>joint_state_topic_hardware_interface/JointStateTopicSystem</plugin>
+      <param name="joint_commands_topic">/topic_based_joint_commands</param>
+      <param name="joint_states_topic">/topic_based_custom_joint_states</param>
+      <param name="command_type">joint_command</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
+  auto urdf =
+      ros2_control_test_assets::urdf_head + hardware_system_2dof_topic_based + ros2_control_test_assets::urdf_tail;
+
+  init_rm(urdf);
+
+  activate_components(*rm_, { "JointStateTopicBasedSystem2dof" });
+
+  hardware_interface::LoanedCommandInterface j1_p_c = rm_->claim_command_interface("joint1/position");
+  hardware_interface::LoanedCommandInterface j2_v_c = rm_->claim_command_interface("joint2/velocity");
+
+  ASSERT_TRUE(j1_p_c.set_value(0.12));
+  ASSERT_TRUE(j2_v_c.set_value(0.24));
+
+  wait_for_publisher("/topic_based_joint_commands");
+
+  hardware_interface::return_type ret;
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+
+  wait_for_msg(std::chrono::milliseconds{ 100 });
+
+  ASSERT_NE(command_msg, nullptr);
+  EXPECT_EQ(command_msg->interface_name, "velocity");
+  EXPECT_THAT(command_msg->joint_names, ::testing::ElementsAre("joint2"));
+  EXPECT_THAT(command_msg->values, ::testing::ElementsAre(0.24));
+}
+
+TEST_F(TestTopicBasedSystem, topic_based_system_2dof_joint_command_full_workflow)
+{
+  control_msgs::msg::JointCommand::SharedPtr command_msg;
+  auto command_subscriber = node_->create_subscription<control_msgs::msg::JointCommand>(
+      "/topic_based_joint_commands", rclcpp::QoS(1),
+      [&command_msg](const control_msgs::msg::JointCommand::SharedPtr msg) { command_msg = msg; });
+  executor_->add_node(node_);
+
+  const std::string hardware_system_2dof_topic_based =
+      R"(
+  <ros2_control name="JointStateTopicBasedSystem2dof" type="system">
+    <hardware>
+      <plugin>joint_state_topic_hardware_interface/JointStateTopicSystem</plugin>
+      <param name="joint_commands_topic">/topic_based_joint_commands</param>
+      <param name="joint_states_topic">/topic_based_custom_joint_states</param>
+      <param name="command_type">joint_command</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">1.57</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">-1.57</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
+  auto urdf =
+      ros2_control_test_assets::urdf_head + hardware_system_2dof_topic_based + ros2_control_test_assets::urdf_tail;
+
+  init_rm(urdf);
+
+  activate_components(*rm_, { "JointStateTopicBasedSystem2dof" });
+
+  EXPECT_EQ(1u, rm_->system_components_size());
+  ASSERT_EQ(4u, rm_->state_interface_keys().size());
+  ASSERT_EQ(4u, rm_->command_interface_keys().size());
+
+  hardware_interface::LoanedStateInterface j1_p_s = rm_->claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1_v_s = rm_->claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedStateInterface j2_p_s = rm_->claim_state_interface("joint2/position");
+  hardware_interface::LoanedStateInterface j2_v_s = rm_->claim_state_interface("joint2/velocity");
+  hardware_interface::LoanedCommandInterface j1_p_c = rm_->claim_command_interface("joint1/position");
+  hardware_interface::LoanedCommandInterface j1_v_c = rm_->claim_command_interface("joint1/velocity");
+  hardware_interface::LoanedCommandInterface j2_p_c = rm_->claim_command_interface("joint2/position");
+  hardware_interface::LoanedCommandInterface j2_v_c = rm_->claim_command_interface("joint2/velocity");
+
+  EXPECT_EQ(j1_p_s.get_optional().value(), 1.57);
+  EXPECT_TRUE(std::isnan(j1_v_s.get_optional().value()));
+  EXPECT_EQ(j2_p_s.get_optional().value(), -1.57);
+  EXPECT_TRUE(std::isnan(j2_v_s.get_optional().value()));
+
+  ASSERT_TRUE(j1_p_c.set_value(0.11));
+  ASSERT_TRUE(j1_v_c.set_value(0.12));
+  ASSERT_TRUE(j2_p_c.set_value(0.13));
+  ASSERT_TRUE(j2_v_c.set_value(0.14));
+
+  hardware_interface::return_type ret;
+  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+
+  EXPECT_EQ(j1_p_s.get_optional().value(), 1.57);
+  EXPECT_TRUE(std::isnan(j1_v_s.get_optional().value()));
+  EXPECT_EQ(j2_p_s.get_optional().value(), -1.57);
+  EXPECT_TRUE(std::isnan(j2_v_s.get_optional().value()));
+
+  publish({ "joint1", "joint2" }, { 0.21, 0.23 }, { 0.22, 0.24 });
+  wait_for_msg();
+
+  ASSERT_NO_THROW(ret = rm_->read(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+  ASSERT_NO_THROW(ret = rm_->write(TIME, PERIOD).result);
+  ASSERT_EQ(ret, hardware_interface::return_type::OK);
+
+  EXPECT_EQ(j1_p_s.get_optional().value(), 0.21);
+  EXPECT_EQ(j1_v_s.get_optional().value(), 0.22);
+  EXPECT_EQ(j2_p_s.get_optional().value(), 0.23);
+  EXPECT_EQ(j2_v_s.get_optional().value(), 0.24);
+
+  EXPECT_EQ(j1_p_c.get_optional().value(), 0.11);
+  EXPECT_EQ(j1_v_c.get_optional().value(), 0.12);
+  EXPECT_EQ(j2_p_c.get_optional().value(), 0.13);
+  EXPECT_EQ(j2_v_c.get_optional().value(), 0.14);
 }

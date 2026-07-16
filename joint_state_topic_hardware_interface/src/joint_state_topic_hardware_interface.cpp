@@ -17,6 +17,7 @@
 #include <cmath>
 #include <iterator>
 #include <limits>
+#include <map>
 #include <set>
 #include <string>
 #include <vector>
@@ -70,11 +71,22 @@ CallbackReturn JointStateTopicSystem::on_init(const hardware_interface::Hardware
     trigger_joint_command_threshold_ = std::stod(it->second);
   }
 
-  topic_based_joint_commands_publisher_ = get_node()->create_publisher<sensor_msgs::msg::JointState>(
-      get_hardware_parameter("joint_commands_topic", "/robot_joint_commands"), rclcpp::QoS(1));
   topic_based_joint_states_subscriber_ = get_node()->create_subscription<sensor_msgs::msg::JointState>(
       get_hardware_parameter("joint_states_topic", "/robot_joint_states"), rclcpp::SensorDataQoS(),
       [this](const sensor_msgs::msg::JointState::SharedPtr joint_state) { latest_joint_state_ = *joint_state; });
+
+  const auto commands_topic = get_hardware_parameter("joint_commands_topic", "/robot_joint_commands");
+  if (get_hardware_parameter("command_type", "joint_state") == "joint_command")
+  {
+    use_joint_command_msg_ = true;
+    topic_based_joint_command_publisher_ =
+        get_node()->create_publisher<control_msgs::msg::JointCommand>(commands_topic, rclcpp::QoS(1));
+  }
+  else
+  {
+    topic_based_joint_state_publisher_ =
+        get_node()->create_publisher<sensor_msgs::msg::JointState>(commands_topic, rclcpp::QoS(1));
+  }
 
   // if the values on the `joint_states_topic` are wrapped between -2*pi and 2*pi (like they are in Isaac Sim)
   // sum the total joint rotation returned on the `joint_state_values_` interface
@@ -199,37 +211,70 @@ hardware_interface::return_type JointStateTopicSystem::write(const rclcpp::Time&
     return hardware_interface::return_type::OK;
   }
 
-  sensor_msgs::msg::JointState joint_state;
-  for (std::size_t i = 0; i < joints.size(); ++i)
+  if (use_joint_command_msg_)
   {
-    joint_state.name.push_back(joints[i].name);
-    joint_state.header.stamp = get_node()->now();
-    // only send commands to the interfaces that are defined for this joint
-    for (const auto& interface : joints[i].command_interfaces)
+    std::map<std::string, control_msgs::msg::JointCommand> commands_by_interface;
+    for (std::size_t i = 0; i < joints.size(); ++i)
     {
-      if (interface.name == hardware_interface::HW_IF_POSITION)
+      for (const auto& interface : joints[i].command_interfaces)
       {
-        joint_state.position.push_back(get_command(joints[i].name + "/" + interface.name));
+        const bool supported_command_interface = interface.name == hardware_interface::HW_IF_POSITION ||
+                                                 interface.name == hardware_interface::HW_IF_VELOCITY ||
+                                                 interface.name == hardware_interface::HW_IF_EFFORT;
+        if (!supported_command_interface)
+        {
+          continue;
+        }
+        if (commands_by_interface.find(interface.name) == commands_by_interface.end())
+        {
+          commands_by_interface[interface.name].header.stamp = get_node()->now();
+          commands_by_interface[interface.name].interface_name = interface.name;
+        }
+        commands_by_interface[interface.name].joint_names.push_back(joints[i].name);
+        commands_by_interface[interface.name].values.push_back(get_command(joints[i].name + "/" + interface.name));
       }
-      else if (interface.name == hardware_interface::HW_IF_VELOCITY)
+    }
+    if (rclcpp::ok())
+    {
+      for (auto& [interface_name, msg] : commands_by_interface)
       {
-        joint_state.velocity.push_back(get_command(joints[i].name + "/" + interface.name));
-      }
-      else if (interface.name == hardware_interface::HW_IF_EFFORT)
-      {
-        joint_state.effort.push_back(get_command(joints[i].name + "/" + interface.name));
-      }
-      else
-      {
-        RCLCPP_WARN_ONCE(get_node()->get_logger(), "Joint '%s' has unsupported command interfaces found: %s.",
-                         joints[i].name.c_str(), interface.name.c_str());
+        topic_based_joint_command_publisher_->publish(msg);
       }
     }
   }
-
-  if (rclcpp::ok())
+  else
   {
-    topic_based_joint_commands_publisher_->publish(joint_state);
+    sensor_msgs::msg::JointState joint_state;
+    for (std::size_t i = 0; i < joints.size(); ++i)
+    {
+      joint_state.name.push_back(joints[i].name);
+      joint_state.header.stamp = get_node()->now();
+      // only send commands to the interfaces that are defined for this joint
+      for (const auto& interface : joints[i].command_interfaces)
+      {
+        if (interface.name == hardware_interface::HW_IF_POSITION)
+        {
+          joint_state.position.push_back(get_command(joints[i].name + "/" + interface.name));
+        }
+        else if (interface.name == hardware_interface::HW_IF_VELOCITY)
+        {
+          joint_state.velocity.push_back(get_command(joints[i].name + "/" + interface.name));
+        }
+        else if (interface.name == hardware_interface::HW_IF_EFFORT)
+        {
+          joint_state.effort.push_back(get_command(joints[i].name + "/" + interface.name));
+        }
+        else
+        {
+          RCLCPP_WARN_ONCE(get_node()->get_logger(), "Joint '%s' has unsupported command interfaces found: %s.",
+                           joints[i].name.c_str(), interface.name.c_str());
+        }
+      }
+    }
+    if (rclcpp::ok())
+    {
+      topic_based_joint_state_publisher_->publish(joint_state);
+    }
   }
 
   return hardware_interface::return_type::OK;
