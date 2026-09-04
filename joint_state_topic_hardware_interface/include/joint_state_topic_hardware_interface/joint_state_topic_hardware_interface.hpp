@@ -50,7 +50,7 @@ private:
 
   // If the difference between the current joint state and joint command is less than this value,
   // the joint command will not be published.
-  double trigger_joint_command_threshold_ = 1e-5;
+  double trigger_joint_command_threshold_ = -1;
 };
 
 }  // namespace joint_state_topic_hardware_interface
