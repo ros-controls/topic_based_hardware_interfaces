@@ -1,0 +1,11 @@
+<library path="joint_command_topic_hardware_interface">
+  <class
+    name="joint_command_topic_hardware_interface/JointCommandTopicSystem"
+    type="joint_command_topic_hardware_interface::JointCommandTopicSystem"
+    base_class_type="hardware_interface::SystemInterface"
+  >
+    <description>
+      ros2_control hardware interface for JointCommand topic based control.
+    </description>
+  </class>
+</library>

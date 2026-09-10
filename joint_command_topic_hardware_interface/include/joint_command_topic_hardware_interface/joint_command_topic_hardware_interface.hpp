@@ -1,0 +1,68 @@
+// Copyright 2026 ros2_control Development Team
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+/* Author: Kamalkant Thangaraju */
+
+#pragma once
+
+// C++
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
+// ROS
+#include <hardware_interface/system_interface.hpp>
+#include <hardware_interface/types/hardware_component_interface_params.hpp>
+#include <rclcpp/node.hpp>
+#include <rclcpp/publisher.hpp>
+#include <rclcpp/subscription.hpp>
+#include <realtime_tools/realtime_buffer.hpp>
+
+#include <control_msgs/msg/joint_command.hpp>
+#include <sensor_msgs/msg/joint_state.hpp>
+
+namespace joint_command_topic_hardware_interface
+{
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
+class JointCommandTopicSystem : public hardware_interface::SystemInterface
+{
+public:
+  CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams& params) override;
+
+  hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period) override;
+
+  hardware_interface::return_type write(const rclcpp::Time& time, const rclcpp::Duration& period) override;
+
+private:
+  struct JointCommandGroup
+  {
+    std::string interface_name;
+    std::vector<std::string> joint_names;
+    std::vector<std::string> command_keys;
+    control_msgs::msg::JointCommand msg;
+  };
+
+  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr topic_based_joint_states_subscriber_;
+  std::map<std::string, rclcpp::Publisher<control_msgs::msg::JointCommand>::SharedPtr>
+      topic_based_joint_command_publishers_;
+  std::map<std::string, JointCommandGroup> command_groups_;
+  realtime_tools::RealtimeBuffer<sensor_msgs::msg::JointState> latest_joint_state_;
+  bool sum_wrapped_joint_states_{ false };
+
+  double trigger_joint_command_threshold_ = 1e-5;
+};
+
+}  // namespace joint_command_topic_hardware_interface

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>joint_command_topic_hardware_interface</name>
+  <version>1.1.0</version>
+  <description>ros2_control hardware interface for JointCommand topic based control</description>
+
+  <maintainer email="marq.razz@gmail.com">Marq Rasmussen</maintainer>
+  <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
+  <maintainer email="christoph.froehlich@ait.ac.at">Christoph Froehlich</maintainer>
+
+  <author email="itzkamalkant@gmail.com">Kamalkant Thangaraju</author>
+
+  <license>Apache License 2.0</license>
+
+  <url type="website">https://github.com/ros-controls/topic_based_hardware_interfaces</url>
+  <url type="bugtracker">
+    https://github.com/ros-controls/topic_based_hardware_interfaces/issues</url>
+  <url type="repository">https://github.com/ros-controls/topic_based_hardware_interfaces</url>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>ros2_control_cmake</build_depend>
+
+  <depend>angles</depend>
+  <depend>control_msgs</depend>
+  <depend>hardware_interface</depend>
+  <depend>rclcpp</depend>
+  <depend>realtime_tools</depend>
+  <depend>sensor_msgs</depend>
+
+  <test_depend>ament_cmake_gmock</test_depend>
+  <test_depend>ros2_control_test_assets</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
