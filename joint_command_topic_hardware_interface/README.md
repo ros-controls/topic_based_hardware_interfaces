@@ -2,11 +2,11 @@
 
 The Joint Command Topic Based System implements a ros2_control `hardware_interface::SystemInterface` supporting command and state interfaces through the ROS topic communication layer. It publishes commands as `control_msgs/JointCommand` messages, one topic per interface type. Only `position`, `velocity` and `effort` command interfaces are supported, anything else is ignored with a warning.
 
-## ros2_control urdf tag
+## Joint command ros2_control urdf tag
 
 The `joint_command_topic_hardware_interface` has a few `ros2_control` urdf tags to customize its behavior.
 
-### Parameters
+### Joint command parameters
 
 * joint_commands_topic: (default: "/robot_joint_commands"). Base topic for the joint command topics. Example: `<param name="joint_commands_topic">/my_topic_joint_commands</param>`.
 * joint_states_topic: (default: "/robot_joint_states"). Example: `<param name="joint_states_topic">/my_topic_joint_states</param>`.
