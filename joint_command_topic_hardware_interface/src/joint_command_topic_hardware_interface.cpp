@@ -65,9 +65,7 @@ CallbackReturn JointCommandTopicSystem::on_init(const hardware_interface::Hardwa
 
   topic_based_joint_states_subscriber_ = get_node()->create_subscription<sensor_msgs::msg::JointState>(
       get_hardware_parameter("joint_states_topic", "/robot_joint_states"), rclcpp::SensorDataQoS(),
-      [this](const sensor_msgs::msg::JointState::SharedPtr joint_state) {
-        latest_joint_state_.writeFromNonRT(*joint_state);
-      });
+      [this](const sensor_msgs::msg::JointState joint_state) { latest_joint_state_.set(joint_state); });
 
   const auto joint_commands_topic = get_hardware_parameter("joint_commands_topic", "/robot_joint_commands");
   const auto& joints = get_hardware_info().joints;
@@ -111,7 +109,12 @@ hardware_interface::return_type JointCommandTopicSystem::read(const rclcpp::Time
                                                               const rclcpp::Duration& /*period*/)
 {
   const auto& joints = get_hardware_info().joints;
-  const auto& joint_state = *latest_joint_state_.readFromRT();
+  const auto joint_state_op = latest_joint_state_.try_get();
+  if (!joint_state_op.has_value())
+  {
+    return hardware_interface::return_type::OK;
+  }
+  const auto& joint_state = joint_state_op.value();
   for (std::size_t i = 0; i < joint_state.name.size(); ++i)
   {
     const auto it = std::find_if(joints.begin(), joints.end(),
