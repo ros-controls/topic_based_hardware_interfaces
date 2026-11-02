@@ -2,8 +2,8 @@
 Changelog for package joint_state_topic_hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.2.0 (2026-11-02)
+------------------
 * Add cmath for fabs() (`#153 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/153>`_)
 * Add joint_command_topic_hardware_interface package (`#131 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/131>`_)
 * Contributors: Christoph Fröhlich, kamal2730
