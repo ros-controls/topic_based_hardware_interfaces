@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <chrono>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
@@ -80,7 +81,7 @@ void common_feedback(rclcpp_action::ClientGoalHandle<control_msgs::action::Follo
 
   if (ct_goals_reached < desired_goals.size())
   {
-    if (fabs(feedback->actual.positions[0] - desired_goals.at(ct_goals_reached)) <= 0.05)
+    if (std::abs(feedback->actual.positions[0] - desired_goals.at(ct_goals_reached)) <= 0.05)
     {
       std::cout << "Goal # " << ct_goals_reached << ": " << desired_goals.at(ct_goals_reached) << " reached"
                 << std::endl;
