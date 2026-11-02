@@ -2,6 +2,12 @@
 Changelog for package joint_state_topic_hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add cmath for fabs() (`#153 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/153>`_)
+* Add joint_command_topic_hardware_interface package (`#131 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/131>`_)
+* Contributors: Christoph Fröhlich, kamal2730
+
 1.1.0 (2026-05-13)
 ------------------
 * Publish JointState commands for velocity-only and effort-only interfaces (`#118 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/118>`_)

@@ -2,6 +2,9 @@
 Changelog for package cm_topic_hardware_component
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.1.0 (2026-05-13)
 ------------------
 * Bump C++ version to C++20 (`#119 <https://github.com/ros-controls/topic_based_hardware_interfaces/issues/119>`_)
