@@ -15,7 +15,6 @@ on:
       - '**/CMakeLists.txt'
       - 'topic_based_hardware_interfaces.rolling.repos'
       - 'topic_based_hardware_interfaces.lyrical.repos'
-      - 'topic_based_hardware_interfaces.kilted.repos'
       - 'topic_based_hardware_interfaces.jazzy.repos'
       - '**.xml'
 
@@ -29,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [jazzy, kilted, lyrical, rolling]
+        ROS_DISTRO: [jazzy, lyrical, rolling]
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-abi-check.yml@master
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}

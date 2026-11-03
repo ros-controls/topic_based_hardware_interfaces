@@ -15,7 +15,6 @@ on:
       - '**/CMakeLists.txt'
       - 'topic_based_hardware_interfaces.rolling.repos'
       - 'topic_based_hardware_interfaces.lyrical.repos'
-      - 'topic_based_hardware_interfaces.kilted.repos'
       - 'topic_based_hardware_interfaces.jazzy.repos'
       - '**.xml'
   push: *event
@@ -31,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [jazzy, kilted, lyrical, rolling]
+        ROS_DISTRO: [jazzy, lyrical, rolling]
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}
       upstream_workspace: topic_based_hardware_interfaces.${{ matrix.ROS_DISTRO }}.repos
